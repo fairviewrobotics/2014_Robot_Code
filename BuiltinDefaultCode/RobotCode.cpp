@@ -88,7 +88,7 @@ public:
 		frontRightRegular= new Victor(2);
 		backLeftRegular= new Victor(3);
 		backRightRegular= new Victor(4);
-		righMet=new Victor(5);
+		rightMet=new Victor(5);
 		leftMet=new Victor(6);
 		
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
