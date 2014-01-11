@@ -51,11 +51,14 @@
 class BuiltinDefaultCode : public IterativeRobot{
 	
 	// Declare variable for the robot drive system
-	RobotDrive *m_robotDrive;		// robot will use PWM 1-4 for drive motors
-	Victor *frontLeft;
-	Victor *frontRight;
-	Victor *backLeft;
-	Victor *backRight; 
+	RobotDrive *r_robotDrive;	
+	RobotDrive *m_robotDrive;	// robot will use PWM 1-4 for drive motors
+	Victor *frontLeftRegular;
+	Victor *frontRightRegular;
+	Victor *backLeftRegular;
+	Victor *backRightRegular; 
+	Victor *rightMet;
+	Victor *leftMet;
 	
 	// Declare a variable to use to access the driver station object
 	DriverStation *m_ds;						// driver station object
@@ -64,20 +67,6 @@ class BuiltinDefaultCode : public IterativeRobot{
 	
 	// Declare variables for the two joysticks being used
 	Joystick *driveController;			// joystick 1 (arcade stick or right tank stick)
-	
-	static const int NUM_JOYSTICK_BUTTONS = 16;
-	bool m_rightStickButtonState[(NUM_JOYSTICK_BUTTONS+1)];
-	bool m_leftStickButtonState[(NUM_JOYSTICK_BUTTONS+1)];	
-	
-	// Declare variables for each of the eight solenoid outputs
-	static const int NUM_SOLENOIDS = 8;
-	Solenoid *m_solenoids[(NUM_SOLENOIDS+1)];
-
-	enum {							// drive mode selection
-		UNINITIALIZED_DRIVE = 0,
-		ARCADE_DRIVE = 1,
-		TANK_DRIVE = 2
-	} m_driveMode;
 	
 	// Local variables to count the number of periodic loops performed
 	UINT32 m_autoPeriodicLoops;
@@ -95,13 +84,16 @@ public:
 	BuiltinDefaultCode(void)	{
 		printf("BuiltinDefaultCode Constructor Started\n");
 		
-		frontLeft= new Victor(1);
-		frontRight= new Victor(2);
-		backLeft= new Victor(3);
-		backRight= new Victor(4);
-
+		frontLeftRegular= new Victor(1);
+		frontRightRegular= new Victor(2);
+		backLeftRegular= new Victor(3);
+		backRightRegular= new Victor(4);
+		righMet=new Victor(5);
+		leftMet=new Victor(6);
+		
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
-		m_robotDrive = new RobotDrive(frontLeft, frontRight, backLeft, backRight);
+		r_robotDrive = new RobotDrive(frontLeft, frontRight, backLeft, backRight);
+		m_robotDrive = new RobotDrive(leftMet, rightMet);
 
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
@@ -131,7 +123,7 @@ public:
 		m_disabledPeriodicLoops = 0;
 		m_telePeriodicLoops = 0;
 
-		printf("BuiltinDefaultCode Constructor Completed\n");
+		printf("BuiltinDefaultCode Constructor Completed\n"); 
 	}
 	
 	
@@ -197,11 +189,11 @@ public:
 		/* below code commented out for safety
 		if (m_autoPeriodicLoops == 1) {
 			// When on the first periodic loop in autonomous mode, start driving forwards at half speed
-			m_robotDrive->Drive(0.5, 0.0);			// drive forwards at half speed
+			r_robotDrive->Drive(0.5, 0.0);			// drive forwards at half speed
 		}
 		if (m_autoPeriodicLoops == (2 * GetLoopsPerSec())) {
 			// After 2 seconds, stop the robot 
-			m_robotDrive->Drive(0.0, 0.0);			// stop robot
+			r_robotDrive->Drive(0.0, 0.0);			// stop robot
 		}
 		*/
 	}
@@ -209,25 +201,35 @@ public:
 	
 	void TeleopPeriodic(void) {
 		while(1){
+			float speed=0.3;
 			if (driveController->GetRawButton(8) && !driveController->GetRawButton(7)){//turn right slowly on right bumper press 
-				frontLeft-> SetSpeed(0.3);
-				frontRight-> SetSpeed(-0.3);
-				backLeft-> SetSpeed(0.3);
-				backRight-> SetSpeed(-0.3);
+				frontLeft-> SetSpeed(speed);
+				backLeft-> SetSpeed(speed);
+				leftMet->SetSpeed(speed);
+				frontRight-> SetSpeed(-1*speed);
+				backRight-> SetSpeed(-1*speed);
+				rightMet->SetSpeed(-1*speed);
+				
 			}else if (driveController->GetRawButton(7) && !driveController->GetRawButton(8)){ //turn left slowly on left bumper
-				frontLeft-> SetSpeed(-0.3);
-				frontRight-> SetSpeed(0.3);
-				backLeft-> SetSpeed(-0.3);
-				backRight-> SetSpeed(0.3);
+				frontLeft-> SetSpeed(-1*speed);
+				backLeft-> SetSpeed(-1*speed);
+				leftMet->SetSpeed(-1*speed); 
+				frontRight-> SetSpeed(speed);
+				backRight-> SetSpeed(speed);
+				rightMet->SetSpeed(speed);
 			}else{
 				if (fabs(driveController->GetRawAxis(4))>= 0.05 || fabs(driveController->GetRawAxis(2))>= 0.05){
-				m_robotDrive->TankDrive( 				//tank drive with joystick input
-						driveController->GetRawAxis(4), driveController->GetRawAxis(2));
-				}else{ 									//dead zone set speed to 0
-					frontLeft -> SetSpeed(0);
+					float leftStick=driveController->GetRawAxis(4); //get stick values
+					float rightStick=driveController->GetRawAxis(2);
+					r_robotDrive->TankDrive(leftStick, rightStick); //tank drive with joystick input for regular wheels
+					m_robotDrive->TankDrive(leftStick, rightStick);
+				}else{ 								
+					frontLeft -> SetSpeed(0);    	//dead zone set speed to 0
 					frontRight-> SetSpeed(0);
 					backLeft-> SetSpeed(0);
 					backRight-> SetSpeed(0);
+					leftMet->SetSpeed(0);
+					rightMet->SetSpeed(0);
 				}
 			}
 		// increment the number of teleop periodic loops completed
