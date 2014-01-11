@@ -223,13 +223,14 @@ public:
 					float rightStick=driveController->GetRawAxis(2);
 					r_robotDrive->TankDrive(leftStick, rightStick); //tank drive with joystick input for regular wheels
 					m_robotDrive->TankDrive(leftStick, rightStick);
-				}else{ 								
-					frontLeft -> SetSpeed(0);    	//dead zone set speed to 0
-					frontRight-> SetSpeed(0);
-					backLeft-> SetSpeed(0);
-					backRight-> SetSpeed(0);
-					leftMet->SetSpeed(0);
-					rightMet->SetSpeed(0);
+				}else{
+					int stopSpeed=0;
+					frontLeft -> SetSpeed(stopSpeed);    	//dead zone set speed to 0
+					frontRight-> SetSpeed(stopSpeed);
+					backLeft-> SetSpeed(stopSpeed);
+					backRight-> SetSpeed(stopSpeed);
+					leftMet->SetSpeed(stopSpeed);
+					rightMet->SetSpeed(stopSpeed);
 				}
 			}
 		// increment the number of teleop periodic loops completed
