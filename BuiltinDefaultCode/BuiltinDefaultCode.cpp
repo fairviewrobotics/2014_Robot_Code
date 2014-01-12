@@ -67,14 +67,14 @@ public:
 		right_2->SetSpeed(speed);
 	}
 	void ShiftHigh(void){
-		if(shiftRight->!Get()){ // false is low gear true is high gear
+		if(!(shiftRight->Get())) { // false is low gear true is high gear
 			shiftRight->Set(true);
 			shiftLeft->Set(true);
 		}
 			
 	}
 	void ShiftLow(void){
-		if(shiftRight->Get()){
+		if(shiftRight->Get()) {
 			shiftRight->Set(false);
 			shiftLeft->Set(false);
 		}
@@ -114,8 +114,8 @@ public:
 	void TeleopPeriodic(void) {
 		float leftStick=gamePad->GetRawAxis(4);
 		float rightStick=gamePad->GetRawAxis(2);
-		bool rightBumper=gamePad->GetRawButton();
-		bool leftBumper=gamePad->GetRawButton();
+		bool rightBumper=gamePad->GetRawButton(8); // Button not actually the right one
+		bool leftBumper=gamePad->GetRawButton(9);  // Button not actually the right one
 		
 		if(fabs(leftStick)>=0.05 || fabs(rightStick>=0.05)){
 			m_robotDrive->TankDrive(leftStick, rightStick);
