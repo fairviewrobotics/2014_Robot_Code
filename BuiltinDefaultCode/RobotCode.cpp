@@ -11,14 +11,14 @@ class BuiltinDefaultCode : public IterativeRobot{
 	Victor *left_1;
 	Victor *left_2;
 	Joystick *driveController;
-	Solenoid *passingPiston;
-											// Declare a variable to use to access the driver station object
+	Solenoid *passingPiston;				
+												// Declare a variable to use to access the driver station object
 	DriverStation *m_ds;						// driver station object
 	UINT32 m_priorPacketNumber;					// keep track of the most recent packet number from the DS
 	UINT8 m_dsPacketsReceivedInCurrentSecond;	// keep track of the ds packets received in the current second
 	
 												
-	Joystick *driveController;					// Declare variables for the two joysticks being used
+	Joystick *driveController;					// Declare variables for the joystick being used
 
 												// Local variables to count the number of periodic loops performed
 	UINT32 m_autoPeriodicLoops;
@@ -40,7 +40,8 @@ public:
 		right_1=new Victor(3);
 		right_2=new Victor(4);
 		passingPiston=new Solenoid(1); //////////////////////////////////////////////////////////////ACTUAL PIN?
-												// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
+		driveController= new Joystick(1);
+											
 		m_robotDrive = new RobotDrive(left_1,left_2,right_1,right_2);
 
 												// Acquire the Driver Station object
@@ -49,10 +50,8 @@ public:
 		m_dsPacketsReceivedInCurrentSecond = 0;
 
 												// Define joysticks being used at USB port #1 
-		driveController= new Joystick(1);
+
 	}
-	
-	
 	/********************************** Init Routines *************************************/
 
 	void RobotInit(void) {
@@ -148,7 +147,7 @@ public:
 		/*
 		 * No longer needed since periodic loops are now synchronized with incoming packets.
 		if (m_ds->GetPacketNumber() != m_priorPacketNumber) {
-		*/
+		
 			/* 
 			 * Code placed in here will be called only when a new packet of information
 			 * has been received by the Driver Station.  Any code which needs new information
@@ -159,7 +158,7 @@ public:
 						
 			// put Driver Station-dependent code here
 
-			} 
+			//} 
 		/*
 		}  // if (m_ds->GetPacketNumber()...
 		*/
