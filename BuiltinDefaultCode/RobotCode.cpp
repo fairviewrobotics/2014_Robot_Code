@@ -10,7 +10,6 @@ class BuiltinDefaultCode : public IterativeRobot{
 	Victor *right_2;
 	Victor *left_1;
 	Victor *left_2;
-	Joystick *driveController;
 	Solenoid *passingPiston;				
 												// Declare a variable to use to access the driver station object
 	DriverStation *m_ds;						// driver station object
@@ -74,7 +73,6 @@ public:
 	void TeleopInit(void) {
 		m_telePeriodicLoops = 0;				// Reset the loop counter for teleop mode
 		m_dsPacketsReceivedInCurrentSecond = 0;	// Reset the number of dsPackets in current second
-		m_driveMode = UNINITIALIZED_DRIVE;		// Set drive mode to uninitialized
 	}
 
 	/********************************** Periodic Routines *************************************/
@@ -104,10 +102,9 @@ public:
 	void TeleopPeriodic(void) {
 		bool flag=true;
 		while(1){
-			float speed=0.3;
+		 	float speed=0.3;
 			float leftStick=driveController->GetRawAxis(4); 									//get stick values
 			float rightStick=driveController->GetRawAxis(2);
-			bool flag=true;
 			if (driveController->GetRawButton(8) && !driveController->GetRawButton(7)){			//turn right slowly on right bumper press 
 				left_1->SetSpeed(speed);
 				left_2->SetSpeed(speed);
@@ -146,22 +143,23 @@ public:
 
 		/*
 		 * No longer needed since periodic loops are now synchronized with incoming packets.
+		
 		if (m_ds->GetPacketNumber() != m_priorPacketNumber) {
 		
-			/* 
-			 * Code placed in here will be called only when a new packet of information
-			 * has been received by the Driver Station.  Any code which needs new information
-			 * from the DS should go in here
-			 */
+			// Code placed in here will be called only when a new packet of information
+			// has been received by the Driver Station.  Any code which needs new information
+			// from the DS should go in here
 			 
 			m_dsPacketsReceivedInCurrentSecond++;					// increment DS packets received
 						
 			// put Driver Station-dependent code here
 
-			//} 
-		/*
+			}
 		}  // if (m_ds->GetPacketNumber()...
+		
 		*/
+
+		} // while(1)
 
 	} // TeleopPeriodic(void)
 
@@ -171,7 +169,6 @@ public:
 	/* 
 	 * These routines are not used in this demonstration robot
 	 *
-	 * 
 	void DisabledContinuous(void) {
 	}
 
@@ -183,4 +180,6 @@ public:
 	*/
 			
 };
+
+}
 START_ROBOT_CLASS(BuiltinDefaultCode);
