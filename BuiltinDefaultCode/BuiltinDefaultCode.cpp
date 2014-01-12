@@ -1,25 +1,30 @@
 #include "WPILib.h"
 #include <math.h>
-class BuiltinDefaultCode : public IterativeRobot
-{
+
+class BuiltinDefaultCode : public IterativeRobot {
 	// Declare variable for the robot drive system
-	RobotDrive *m_robotDrive;		// robot will use PWM 1-4 for drive motors
+	RobotDrive *m_robotDrive; // Robot will use PWM 1-4 for drive motors
 	
 	// Declare a variable to use to access the driver station object
-	DriverStation *m_ds;						// driver station object
-	UINT32 m_priorPacketNumber;					// keep track of the most recent packet number from the DS
-	UINT8 m_dsPacketsReceivedInCurrentSecond;	// keep track of the ds packets received in the current second
+	DriverStation *m_ds; // Driver station object
+	UINT32 m_priorPacketNumber; // Keep track of the most recent packet number from the DS
+	UINT8 m_dsPacketsReceivedInCurrentSecond; // Keep track of the DS packets received in the current second
 	
 	// Declare variables for the two joysticks being used
-	Joystick *gamePad;			// joystick 1 (arcade stick or right tank stick)	
+	Joystick *gamePad; // Joystick 1 (arcade stick or right tank stick)
+
 	// Local variables to count the number of periodic loops performed
 	UINT32 m_autoPeriodicLoops;
 	UINT32 m_disabledPeriodicLoops;
 	UINT32 m_telePeriodicLoops;
+
+	// Motor controllers
 	Victor *left_1;
 	Victor *left_2;
 	Victor *right_1;
 	Victor *right_2;
+
+	// Solenoids
 	Solenoid *shiftRight;
 	Solenoid *shiftLeft;
 	
@@ -32,17 +37,19 @@ public:
  * the robot.  Essentially, the constructor defines the input/output mapping for the robot,
  * providing named objects for each of the robot interfaces. 
  */
-	BuiltinDefaultCode(void)	{
+	BuiltinDefaultCode(void) {
 		printf("BuiltinDefaultCode Constructor Started\n");
-		left_1 = new Victor(1);
-		left_2=new Victor(2);
-		right_1=new Victor(3);
-		right_2=new Victor(4);
-		shiftRight=new Solenoid(1);
-		shiftLeft=new Solenoid(2);
+		left_1  = new Victor(1);
+		left_2  = new Victor(2);
+		right_1 = new Victor(3);
+		right_2 = new Victor(4);
+		shiftRight = new Solenoid(1);
+		shiftLeft  = new Solenoid(2);
+
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(1, 2, 3, 4);
 		gamePad=new Joystick(1);
+
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
 		m_priorPacketNumber = 0;
@@ -58,28 +65,32 @@ public:
 	
 	
 	/********************************** Init Routines *************************************/
-	void MotorControlLeft(float speed){
+	void MotorControlLeft(float speed) {
 		left_1->SetSpeed(speed);
 		left_2->SetSpeed(speed);
 	}
-	void MotorControlRight(float speed){
+
+	void MotorControlRight(float speed) {
 		right_1->SetSpeed(speed);
 		right_2->SetSpeed(speed);
 	}
-	void ShiftHigh(void){
-		if(!(shiftRight->Get())) { // false is low gear true is high gear
+
+	void ShiftHigh(void) {
+		// shiftRight->Get() : false is low gear, true is high gear
+		if(!(shiftRight->Get())) {
 			shiftRight->Set(true);
 			shiftLeft->Set(true);
 		}
-			
 	}
-	void ShiftLow(void){
+
+	void ShiftLow(void) {
+		// shiftRight->Get() : false is low gear, true is high gear
 		if(shiftRight->Get()) {
 			shiftRight->Set(false);
 			shiftLeft->Set(false);
 		}
-		
 	}
+
 	void RobotInit(void) {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
@@ -89,54 +100,48 @@ public:
 	}
 	
 	void DisabledInit(void) {
-		m_disabledPeriodicLoops = 0;			// Reset the loop counter for disabled mode
+		m_disabledPeriodicLoops = 0; // Reset the loop counter for disabled mode
 	}
 
 	void AutonomousInit(void) {
-		m_autoPeriodicLoops = 0;				// Reset the loop counter for autonomous mode
+		m_autoPeriodicLoops = 0; // Reset the loop counter for autonomous mode
 	}
 
 	void TeleopInit(void) {
-		m_telePeriodicLoops = 0;				// Reset the loop counter for teleop mode
+		m_telePeriodicLoops = 0; // Reset the loop counter for teleop mode
 		m_dsPacketsReceivedInCurrentSecond = 0;	// Reset the number of dsPackets in current second
 	}
 
 	/********************************** Periodic Routines *************************************/
-	
-	void DisabledPeriodic(void)  {
 
+	void DisabledPeriodic(void) {
 	}
 
 	void AutonomousPeriodic(void) {
 	}
 
-	
 	void TeleopPeriodic(void) {
-		float leftStick=gamePad->GetRawAxis(4);
-		float rightStick=gamePad->GetRawAxis(2);
-		bool rightBumper=gamePad->GetRawButton(8); // Button not actually the right one
-		bool leftBumper=gamePad->GetRawButton(9);  // Button not actually the right one
-		
-		if(fabs(leftStick)>=0.05 || fabs(rightStick>=0.05)){
+		float leftStick  = gamePad->GetRawAxis(4);
+		float rightStick = gamePad->GetRawAxis(2);
+		bool rightBumper = gamePad->GetRawButton(8); // Button not actually the right one
+		bool leftBumper  = gamePad->GetRawButton(9); // Button not actually the right one
+
+		if(fabs(leftStick) >= 0.05 || fabs(rightStick >= 0.05)) {
 			m_robotDrive->TankDrive(leftStick, rightStick);
-		}
-		else if(rightBumper||leftBumper){
-			
-			if(rightBumper&&!leftBumper){
+		} else if(rightBumper || leftBumper) {
+			if(rightBumper && !leftBumper) {
 				ShiftHigh();
-			}else if(leftBumper&&!rightBumper){
+			} else if(leftBumper && !rightBumper) {
 				ShiftLow();
 			}
-		}
-		else{
+		} else {
 			MotorControlLeft(0.0);
 			MotorControlRight(0.0);
-			
 		}
 	} // TeleopPeriodic(void)
 
 
-/********************************** Continuous Routines *************************************/
+	/********************************** Continuous Routines *************************************/
 	void DisabledContinuous(void) {
 	}
 
@@ -146,9 +151,9 @@ public:
 	void TeleopContinuous(void) {
 	}
 
-	
-/********************************** Miscellaneous Routines *************************************/
-	
+
+	/********************************** Miscellaneous Routines *************************************/
+
 	/**
 	 * Clear KITT-style LED display on the solenoids
 	 * 
@@ -170,7 +175,6 @@ public:
 	 * Display a given four-bit value in binary on the given solenoid LEDs
 	 */
 
-			
 };
 
 START_ROBOT_CLASS(BuiltinDefaultCode);
