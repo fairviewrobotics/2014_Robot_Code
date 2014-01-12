@@ -1,6 +1,6 @@
  \
  BuiltinDefaultCode_partialImage/Debug/Objects/BuiltinDefaultCode/BuiltinDefaultCode.o:  \
- C:/WindRiver/workspace/BuiltinDefaultCode/BuiltinDefaultCode.cpp \
+ C:/WindRiver/workspace/2014_Robot_Code/BuiltinDefaultCode/BuiltinDefaultCode.cpp \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/WPILib.h \
   C:/WindRiver/vxworks-6.3/target/h/string.h \
   C:/WindRiver/vxworks-6.3/target/h/types/vxANSI.h \
@@ -388,9 +388,7 @@
   C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/Threshold.h \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/HSLImage.h \
   C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/ColorImage.h \
-  C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIErrors.h \
-  c:/windriver/gnu/3.4.4-vxworks-6.3/x86-win32/lib/gcc/../../../x86-win32/include/c++/3.4.4/iostream \
-  C:/WindRiver/vxworks-6.3/target/h/math.h
+  C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIErrors.h
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPILib.h:
 
@@ -1167,7 +1165,3 @@ C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/HSLImage.h:
 C:/WindRiver/vxworks-6.3/target/h/WPILib/Vision/ColorImage.h:
 
 C:/WindRiver/vxworks-6.3/target/h/WPILib/WPIErrors.h:
-
-c:/windriver/gnu/3.4.4-vxworks-6.3/x86-win32/lib/gcc/../../../x86-win32/include/c++/3.4.4/iostream:
-
-C:/WindRiver/vxworks-6.3/target/h/math.h:

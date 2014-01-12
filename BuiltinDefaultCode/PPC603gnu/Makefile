@@ -32,7 +32,7 @@ MODE_DIR := NonDebug
 endif
 OBJ_DIR := .
 WS_ROOT_DIR := C:/WindRiver/workspace
-PRJ_ROOT_DIR := $(WS_ROOT_DIR)/BuiltinDefaultCode
+PRJ_ROOT_DIR := $(WS_ROOT_DIR)/2014_Robot_Code/BuiltinDefaultCode
 
 
 
