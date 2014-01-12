@@ -23,7 +23,7 @@ class BuiltinDefaultCode : public IterativeRobot{
 	UINT32 m_autoPeriodicLoops;
 	UINT32 m_disabledPeriodicLoops;
 	UINT32 m_telePeriodicLoops;
-		
+
 public:
 /**
  * Constructor for this "BuiltinDefaultCode" Class.
@@ -138,37 +138,14 @@ public:
 					right_2->SetSpeed(0);
 				}
 			}
-		// increment the number of teleop periodic loops completed
+										// increment the number of teleop periodic loops completed
 		m_telePeriodicLoops++;
+		} 								// while(1)
 
-		/*
-		 * No longer needed since periodic loops are now synchronized with incoming packets.
-		
-		if (m_ds->GetPacketNumber() != m_priorPacketNumber) {
-		
-			// Code placed in here will be called only when a new packet of information
-			// has been received by the Driver Station.  Any code which needs new information
-			// from the DS should go in here
-			 
-			m_dsPacketsReceivedInCurrentSecond++;					// increment DS packets received
-						
-			// put Driver Station-dependent code here
-
-			}
-		}  // if (m_ds->GetPacketNumber()...
-		
-		*/
-
-		} // while(1)
-
-	} // TeleopPeriodic(void)
-
+	} 									// TeleopPeriodic(void)
 
 /********************************** Continuous Routines *************************************/
-
-	/* 
-	 * These routines are not used in this demonstration robot
-	 *
+	 
 	void DisabledContinuous(void) {
 	}
 
@@ -177,9 +154,7 @@ public:
 
 	void TeleopContinuous(void) {
 	}
-	*/
 			
 };
-
 }
-START_ROBOT_CLASS(BuiltinDefaultCode);
+START_ROBOT_CLASS(BuiltinDefaultCode);
