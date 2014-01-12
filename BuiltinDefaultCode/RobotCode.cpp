@@ -2,52 +2,6 @@
 #include <iostream>
 #include <math.h>
 
-/**
- * This "BuiltinDefaultCode" provides the "default code" functionality as used in the "Benchtop Test."
- * 
- * The BuiltinDefaultCode extends the IterativeRobot base class to provide the "default code"
- * functionality to confirm the operation and usage of the core control system components, as 
- * used in the "Benchtop Test" described in Chapter 2 of the 2009 FRC Control System Manual.
- * 
- * This program provides features in the Disabled, Autonomous, and Teleop modes as described
- * in the benchtop test directions, including "once-a-second" debugging printouts when disabled, 
- * a "KITT light show" on the solenoid lights when in autonomous, and elementary driving
- * capabilities and "button mapping" of joysticks when teleoperated.  This demonstration
- * program also shows the use of the MotorSafety timer.
- * 
- * This demonstration is not intended to serve as a "starting template" for development of
- * robot code for a team, as there are better templates and examples created specifically
- * for that purpose.  However, teams may find the techniques used in this program to be
- * interesting possibilities for use in their own robot code.
- * 
- * The details of the behavior provided by this demonstration are summarized below:
- *  
- * Disabled Mode:
- * - Once per second, print (on the console) the number of seconds the robot has been disabled.
- * 
- * Autonomous Mode:
- * - Flash the solenoid lights like KITT in Knight Rider
- * - Example code (commented out by default) to drive forward at half-speed for 2 seconds
- * 
- * Teleop Mode:
- * - Select between two different drive options depending upon Z-location of Joystick1
- * - When "Z-Up" (on Joystick1) provide "arcade drive" on Joystick1
- * - When "Z-Down" (on Joystick1) provide "tank drive" on Joystick1 and Joystick2
- * - Use Joystick buttons (on Joystick1 or Joystick2) to display the button number in binary on
- *   the solenoid LEDs (Note that this feature can be used to easily "map out" the buttons on a
- *   Joystick.  Note also that if multiple buttons are pressed simultaneously, a "15" is displayed
- *   on the solenoid LEDs to indicate that multiple buttons are pressed.)
- *
- * This code assumes the following connections:
- * - Driver Station:
- *   - USB 1 - The "right" joystick.  Used for either "arcade drive" or "right" stick for tank drive
- *   - USB 2 - The "left" joystick.  Used as the "left" stick for tank drive
- * 
- * - Robot:
- *   - Digital Sidecar 1:
- *     - PWM 1/3 - Connected to "left" drive motor(s)
- *     - PWM 2/4 - Connected to "right" drive motor(s)
- */
 class BuiltinDefaultCode : public IterativeRobot{
 	
 	// Declare variable for the robot drive system
@@ -58,16 +12,15 @@ class BuiltinDefaultCode : public IterativeRobot{
 	Victor *left_2;
 	Joystick *driveController;
 	Solenoid *passingPiston;
-	
-	// Declare a variable to use to access the driver station object
+											// Declare a variable to use to access the driver station object
 	DriverStation *m_ds;						// driver station object
 	UINT32 m_priorPacketNumber;					// keep track of the most recent packet number from the DS
 	UINT8 m_dsPacketsReceivedInCurrentSecond;	// keep track of the ds packets received in the current second
 	
-	// Declare variables for the two joysticks being used
-	Joystick *driveController;		
-		
-	// Local variables to count the number of periodic loops performed
+												
+	Joystick *driveController;					// Declare variables for the two joysticks being used
+
+												// Local variables to count the number of periodic loops performed
 	UINT32 m_autoPeriodicLoops;
 	UINT32 m_disabledPeriodicLoops;
 	UINT32 m_telePeriodicLoops;
@@ -87,15 +40,15 @@ public:
 		right_1=new Victor(3);
 		right_2=new Victor(4);
 		passingPiston=new Solenoid(1); //////////////////////////////////////////////////////////////ACTUAL PIN?
-		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
+												// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(left_1,left_2,right_1,right_2);
 
-		// Acquire the Driver Station object
+												// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
 		m_priorPacketNumber = 0;
 		m_dsPacketsReceivedInCurrentSecond = 0;
 
-		// Define joysticks being used at USB port #1 
+												// Define joysticks being used at USB port #1 
 		driveController= new Joystick(1);
 	}
 	
@@ -103,8 +56,8 @@ public:
 	/********************************** Init Routines *************************************/
 
 	void RobotInit(void) {
-		// Actions which would be performed once (and only once) upon initialization of the
-		// robot would be put here.
+												// Actions which would be performed once (and only once) upon initialization of the
+												// robot would be put here.
 		
 		printf("RobotInit() completed.\n");
 	}
