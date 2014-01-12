@@ -37,9 +37,6 @@ public:
 		m_priorPacketNumber = 0;
 		m_dsPacketsReceivedInCurrentSecond = 0;
 
-		// Set drive mode to uninitialized
-		m_driveMode = UNINITIALIZED_DRIVE;
-
 		// Initialize counters to record the number of loops completed in autonomous and teleop modes
 		m_autoPeriodicLoops = 0;
 		m_disabledPeriodicLoops = 0;
@@ -69,7 +66,6 @@ public:
 	void TeleopInit(void) {
 		m_telePeriodicLoops = 0;				// Reset the loop counter for teleop mode
 		m_dsPacketsReceivedInCurrentSecond = 0;	// Reset the number of dsPackets in current second
-		m_driveMode = UNINITIALIZED_DRIVE;		// Set drive mode to uninitialized
 	}
 
 	/********************************** Periodic Routines *************************************/
