@@ -20,6 +20,8 @@ class BuiltinDefaultCode : public IterativeRobot
 	Victor *left_2;
 	Victor *right_1;
 	Victor *right_2;
+	Solenoid *shiftRight;
+	Solenoid *shiftLeft;
 	
 		
 public:
@@ -36,6 +38,8 @@ public:
 		left_2=new Victor(2);
 		right_1=new Victor(3);
 		right_2=new Victor(4);
+		shiftRight=new Solenoid(1);
+		shiftLeft=new Solenoid(2);
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(1, 2, 3, 4);
 		gamePad=new Joystick(1);
@@ -62,10 +66,25 @@ public:
 		right_1->SetSpeed(speed);
 		right_2->SetSpeed(speed);
 	}
+	void ShiftHigh(void){
+		if(shiftRight->!Get()){ // false is low gear true is high gear
+			shiftRight->Set(true);
+			shiftLeft->Set(true);
+		}
+			
+	}
+	void ShiftLow(void){
+		if(shiftRight->Get()){
+			shiftRight->Set(false);
+			shiftLeft->Set(false);
+		}
+		
+	}
 	void RobotInit(void) {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
-		
+		shiftLeft->Set(false);
+		shiftRight->Set(false);
 		printf("RobotInit() completed.\n");
 	}
 	
@@ -95,13 +114,23 @@ public:
 	void TeleopPeriodic(void) {
 		float leftStick=gamePad->GetRawAxis(4);
 		float rightStick=gamePad->GetRawAxis(2);
+		bool rightBumper=gamePad->GetRawButton();
+		bool leftBumper=gamePad->GetRawButton();
+		
 		if(fabs(leftStick)>=0.05 || fabs(rightStick>=0.05)){
 			m_robotDrive->TankDrive(leftStick, rightStick);
-		}else{
-			left_1->SetSpeed(0);
-			left_2->SetSpeed(0);
-			right_1->SetSpeed(0);
-			right_2->SetSpeed(0);
+		}
+		else if(rightBumper||leftBumper){
+			
+			if(rightBumper&&!leftBumper){
+				ShiftHigh();
+			}else if(leftBumper&&!rightBumper){
+				ShiftLow();
+			}
+		}
+		else{
+			MotorControlLeft(0.0);
+			MotorControlRight(0.0);
 			
 		}
 	} // TeleopPeriodic(void)
