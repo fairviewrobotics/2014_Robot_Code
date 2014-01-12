@@ -10,7 +10,8 @@ class BuiltinDefaultCode : public IterativeRobot{
 	Victor *right_2;
 	Victor *left_1;
 	Victor *left_2;
-	Solenoid *passingPiston;				
+	Solenoid *passingPiston;
+				
 												// Declare a variable to use to access the driver station object
 	DriverStation *m_ds;						// driver station object
 	UINT32 m_priorPacketNumber;					// keep track of the most recent packet number from the DS
@@ -18,12 +19,11 @@ class BuiltinDefaultCode : public IterativeRobot{
 	
 												
 	Joystick *driveController;					// Declare variables for the joystick being used
-
 												// Local variables to count the number of periodic loops performed
 	UINT32 m_autoPeriodicLoops;
 	UINT32 m_disabledPeriodicLoops;
 	UINT32 m_telePeriodicLoops;
-
+		
 public:
 /**
  * Constructor for this "BuiltinDefaultCode" Class.
@@ -32,7 +32,7 @@ public:
  * the robot.  Essentially, the constructor defines the input/output mapping for the robot,
  * providing named objects for each of the robot interfaces. 
  */
-	BuiltinDefaultCode(void)	{
+	BuiltinDefaultCode(void) {
 		printf("BuiltinDefaultCode Constructor Started\n");
 		left_1=new Victor(1);
 		left_2=new Victor(2);
@@ -157,4 +157,5 @@ public:
 			
 };
 }
-START_ROBOT_CLASS(BuiltinDefaultCode);
+
+START_ROBOT_CLASS(BuiltinDefaultCode);
