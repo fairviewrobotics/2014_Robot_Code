@@ -57,6 +57,7 @@ class BuiltinDefaultCode : public IterativeRobot{
 	Victor *left_1;
 	Victor *left_2;
 	Joystick *driveController;
+	Solenoid *passingPiston;
 	
 	// Declare a variable to use to access the driver station object
 	DriverStation *m_ds;						// driver station object
@@ -85,8 +86,7 @@ public:
 		left_2=new Victor(2);
 		right_1=new Victor(3);
 		right_2=new Victor(4);
-		
-		
+		passingPiston=new Solenoid(1); //////////////////////////////////////////////////////////////ACTUAL PIN?
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(left_1,left_2,right_1,right_2);
 
@@ -173,11 +173,12 @@ public:
 
 	
 	void TeleopPeriodic(void) {
+		bool flag=true;
 		while(1){
 			float speed=0.3;
 			float leftStick=driveController->GetRawAxis(4); 									//get stick values
 			float rightStick=driveController->GetRawAxis(2);
-			
+			bool flag=true;
 			if (driveController->GetRawButton(8) && !driveController->GetRawButton(7)){			//turn right slowly on right bumper press 
 				left_1->SetSpeed(speed);
 				left_2->SetSpeed(speed);
@@ -189,17 +190,26 @@ public:
 				left_2->SetSpeed(-1*speed);
 				right_1->SetSpeed(speed);
 				right_2->SetSpeed(speed);
-			}else{
+			
+			}
+			else if(driveController->GetRawButton(6)&&flag){ //////////////////////////////////////////////////////////// Check button value
+				flag=false; 
+				passingPiston->Set(!passingPiston->Get());
+				
+			}
+			else{
 				if (fabs(leftStick)>= 0.05 || fabs(rightStick)>= 0.05){
 					
 					m_robotDrive->TankDrive(leftStick, rightStick);
 
-				}else{ 								
-					left_1->SetSpeed(0);
-					left_2->SetSpeed(0);
-					right_1->SetSpeed(0);
+				}elseif(!driveController->GetRawButton(6)&&flag==false){ //Flag change to assure the piston toggles properly 
+					flag=true; 
+					
+				}else{
+					left_1->SetSpeed(0); 
+					left_2->SetSpeed(0); 
+					right_1->SetSpeed(0); 
 					right_2->SetSpeed(0);
-
 				}
 			}
 		// increment the number of teleop periodic loops completed
