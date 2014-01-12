@@ -1,4 +1,4 @@
-//#include "WPILib.h"
+#include "WPILib.h"
 #include <iostream>
 #include <math.h>
 
@@ -193,28 +193,13 @@ public:
 				if (fabs(leftStick)>= 0.05 || fabs(rightStick)>= 0.05){
 					
 					m_robotDrive->TankDrive(leftStick, rightStick);
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 				}else{ 								
 					left_1->SetSpeed(0);
 					left_2->SetSpeed(0);
 					right_1->SetSpeed(0);
 					right_2->SetSpeed(0);
-=======
-=======
->>>>>>> ed0857e4e74d6a3668d926b1a8a8c9115ae32dc6
-				}else{
-					int stopSpeed=0;
-					frontLeft -> SetSpeed(stopSpeed);    	//dead zone set speed to 0
-					frontRight-> SetSpeed(stopSpeed);
-					backLeft-> SetSpeed(stopSpeed);
-					backRight-> SetSpeed(stopSpeed);
-					leftMet->SetSpeed(stopSpeed);
-					rightMet->SetSpeed(stopSpeed);
-<<<<<<< HEAD
->>>>>>> ed0857e4e74d6a3668d926b1a8a8c9115ae32dc6
-=======
->>>>>>> ed0857e4e74d6a3668d926b1a8a8c9115ae32dc6
+
 				}
 			}
 		// increment the number of teleop periodic loops completed
@@ -259,5 +244,4 @@ public:
 	*/
 			
 };
-
-START_ROBOT_CLASS(BuiltinDefaultCode);
+START_ROBOT_CLASS(BuiltinDefaultCode);
