@@ -64,21 +64,18 @@ public:
 	
 	void DisabledInit(void) {
 		m_disabledPeriodicLoops = 0;			// Reset the loop counter for disabled mode
-		ClearSolenoidLEDsKITT();
 												// Move the cursor down a few, since we'll move it back up in periodic.
 		printf("\x1b[2B");
 	}
 
 	void AutonomousInit(void) {
 		m_autoPeriodicLoops = 0;				// Reset the loop counter for autonomous mode
-		ClearSolenoidLEDsKITT();
 	}
 
 	void TeleopInit(void) {
 		m_telePeriodicLoops = 0;				// Reset the loop counter for teleop mode
 		m_dsPacketsReceivedInCurrentSecond = 0;	// Reset the number of dsPackets in current second
 		m_driveMode = UNINITIALIZED_DRIVE;		// Set drive mode to uninitialized
-		ClearSolenoidLEDsKITT();
 	}
 
 	/********************************** Periodic Routines *************************************/
@@ -102,26 +99,6 @@ public:
 
 	void AutonomousPeriodic(void) {
 		
-		m_autoPeriodicLoops++;
-
-		// generate KITT-style LED display on the solenoids
-		SolenoidLEDsKITT( m_autoPeriodicLoops );
-				
-		/* the below code (if uncommented) would drive the robot forward at half speed
-		 * for two seconds.  This code is provided as an example of how to drive the 
-		 * robot in autonomous mode, but is not enabled in the default code in order
-		 * to prevent an unsuspecting team from having their robot drive autonomously!
-		 */
-		/* below code commented out for safety
-		if (m_autoPeriodicLoops == 1) {
-			// When on the first periodic loop in autonomous mode, start driving forwards at half speed
-			r_robotDrive->Drive(0.5, 0.0);			// drive forwards at half speed
-		}
-		if (m_autoPeriodicLoops == (2 * GetLoopsPerSec())) {
-			// After 2 seconds, stop the robot 
-			r_robotDrive->Drive(0.0, 0.0);			// stop robot
-		}
-		*/
 	}
 
 	
@@ -155,7 +132,7 @@ public:
 					
 					m_robotDrive->TankDrive(leftStick, rightStick);
 
-				}elseif(!driveController->GetRawButton(6)&&flag==false){ //Flag change to assure the piston toggles properly 
+				}else if(!(driveController->GetRawButton(6))  &&  flag==false){ //Flag change to assure the piston toggles properly 
 					flag=true; 
 					
 				}else{
