@@ -1,4 +1,5 @@
 #include "WPILib.h"
+#include <math.h>
 class BuiltinDefaultCode : public IterativeRobot
 {
 	// Declare variable for the robot drive system
@@ -10,13 +11,16 @@ class BuiltinDefaultCode : public IterativeRobot
 	UINT8 m_dsPacketsReceivedInCurrentSecond;	// keep track of the ds packets received in the current second
 	
 	// Declare variables for the two joysticks being used
-	Joystick *m_rightStick;			// joystick 1 (arcade stick or right tank stick)
-	Joystick *m_leftStick;			// joystick 2 (tank left stick)
-	
+	Joystick *gamePad;			// joystick 1 (arcade stick or right tank stick)	
 	// Local variables to count the number of periodic loops performed
 	UINT32 m_autoPeriodicLoops;
 	UINT32 m_disabledPeriodicLoops;
 	UINT32 m_telePeriodicLoops;
+	Victor *left_1;
+	Victor *left_2;
+	Victor *right_1;
+	Victor *right_2;
+	
 		
 public:
 /**
@@ -28,10 +32,13 @@ public:
  */
 	BuiltinDefaultCode(void)	{
 		printf("BuiltinDefaultCode Constructor Started\n");
-
+		left_1 = new Victor(1);
+		left_2=new Victor(2);
+		right_1=new Victor(3);
+		right_2=new Victor(4);
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
-		m_robotDrive = new RobotDrive(1, 3, 2, 4);
-
+		m_robotDrive = new RobotDrive(1, 2, 3, 4);
+		gamePad=new Joystick(1);
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
 		m_priorPacketNumber = 0;
@@ -47,7 +54,14 @@ public:
 	
 	
 	/********************************** Init Routines *************************************/
-
+	void MotorControlLeft(float speed){
+		left_1->SetSpeed(speed);
+		left_2->SetSpeed(speed);
+	}
+	void MotorControlRight(float speed){
+		right_1->SetSpeed(speed);
+		right_2->SetSpeed(speed);
+	}
 	void RobotInit(void) {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
@@ -79,7 +93,17 @@ public:
 
 	
 	void TeleopPeriodic(void) {
-
+		float leftStick=gamePad->GetRawAxis(4);
+		float rightStick=gamePad->GetRawAxis(2);
+		if(fabs(leftStick)>=0.05 || fabs(rightStick>=0.05)){
+			m_robotDrive->TankDrive(leftStick, rightStick);
+		}else{
+			left_1->SetSpeed(0);
+			left_2->SetSpeed(0);
+			right_1->SetSpeed(0);
+			right_2->SetSpeed(0);
+			
+		}
 	} // TeleopPeriodic(void)
 
 
