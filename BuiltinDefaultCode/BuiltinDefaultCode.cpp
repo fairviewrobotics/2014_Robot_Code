@@ -27,7 +27,7 @@ class BuiltinDefaultCode : public IterativeRobot {
 	// Solenoids
 	Solenoid *shiftRight;
 	Solenoid *shiftLeft;
-	
+	Solenoid *passingPiston;
 		
 public:
 /**
@@ -65,37 +65,14 @@ public:
 	
 	
 	/********************************** Init Routines *************************************/
-	void MotorControlLeft(float speed) {
-		left_1->SetSpeed(speed);
-		left_2->SetSpeed(speed);
-	}
 
-	void MotorControlRight(float speed) {
-		right_1->SetSpeed(speed);
-		right_2->SetSpeed(speed);
-	}
-
-	void ShiftHigh(void) {
-		// shiftRight->Get() : false is low gear, true is high gear
-		if(!(shiftRight->Get())) {
-			shiftRight->Set(true);
-			shiftLeft->Set(true);
-		}
-	}
-
-	void ShiftLow(void) {
-		// shiftRight->Get() : false is low gear, true is high gear
-		if(shiftRight->Get()) {
-			shiftRight->Set(false);
-			shiftLeft->Set(false);
-		}
-	}
 
 	void RobotInit(void) {
 		// Actions which would be performed once (and only once) upon initialization of the
 		// robot would be put here.
-		shiftLeft->Set(false);
-		shiftRight->Set(false);
+		shiftLeft->Set(false); //low gear
+		shiftRight->Set(false); //low gear
+		passingPiston->Set(false); //retracted
 		printf("RobotInit() completed.\n");
 	}
 	
@@ -119,26 +96,83 @@ public:
 
 	void AutonomousPeriodic(void) {
 	}
+	/********************************* Teleop methods *****************************************/
+	void MotorControlLeft(float speed) 
+	{
+		left_1->SetSpeed(speed);
+		left_2->SetSpeed(speed);
+	}
 
-	void TeleopPeriodic(void) {
+	void MotorControlRight(float speed)
+	{
+		right_1->SetSpeed(speed);
+		right_2->SetSpeed(speed);
+	}
+
+	void ShiftHigh(void) 
+		{
+		// shiftRight->Get() : false is low gear, true is high gear
+		if(!(shiftRight->Get())) 
+			{
+				shiftRight->Set(true);
+				shiftLeft->Set(true);
+			}
+		}
+
+	void ShiftLow(void) 
+	{
+		// shiftRight->Get() : false is low gear, true is high gear
+		if(shiftRight->Get()) 
+		{
+			shiftRight->Set(false);
+			shiftLeft->Set(false);
+		}
+	}
+	
+	bool flag=true; //flag object initial declaration to ensure passing Piston toggle works properly
+	 
+	void TeleopPeriodic(void) 
+	{
 		float leftStick  = gamePad->GetRawAxis(4);
 		float rightStick = gamePad->GetRawAxis(2);
 		bool rightBumper = gamePad->GetRawButton(8); // Button not actually the right one
 		bool leftBumper  = gamePad->GetRawButton(9); // Button not actually the right one
-
-		if(fabs(leftStick) >= 0.05 || fabs(rightStick >= 0.05)) {
-			m_robotDrive->TankDrive(leftStick, rightStick);
-		} else if(rightBumper || leftBumper) {
-			if(rightBumper && !leftBumper) {
-				ShiftHigh();
-			} else if(leftBumper && !rightBumper) {
-				ShiftLow();
+		bool buttonA = gamePad->GetRawButton(1);	 // Button not actually the right one
+		if(fabs(leftStick) >= 0.05 || fabs(rightStick >= 0.05)) 
+			{
+				m_robotDrive->TankDrive(leftStick, rightStick);
 			}
-		} else {
-			MotorControlLeft(0.0);
-			MotorControlRight(0.0);
-		}
-	} // TeleopPeriodic(void)
+		else if(rightBumper || leftBumper) 
+			{
+				if(rightBumper && !leftBumper) 
+				{
+					ShiftHigh();
+				}
+				else if(leftBumper && !rightBumper) 
+				{
+					ShiftLow();
+			    }
+			}
+		else if(buttonA && flag)
+			{
+				flag=false;
+				passingPiston->Set(true);
+			}
+		 else
+		 	{
+				if(!buttonA)
+				{
+					flag=false;
+					MotorControlLeft(0.0);
+					MotorControlRight(0.0);
+				}
+				else
+				{
+					MotorControlLeft(0.0);
+					MotorControlRight(0.0);
+				}
+			}
+	} 
 
 
 	/********************************** Continuous Routines *************************************/
