@@ -110,14 +110,14 @@ public:
 	}
 
 	void ShiftHigh(void) 
-		{
+	{
 		// shiftRight->Get() : false is low gear, true is high gear
 		if(!(shiftRight->Get())) 
-			{
-				shiftRight->Set(true);
-				shiftLeft->Set(true);
-			}
+		{
+			shiftRight->Set(true);
+			shiftLeft->Set(true);
 		}
+	}
 
 	void ShiftLow(void) 
 	{
