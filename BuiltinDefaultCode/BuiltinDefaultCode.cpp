@@ -179,10 +179,14 @@ public:
 	void DisabledContinuous(void) {
 	}
 
-	void AutonomousContinuous(void)	{
+	void AutonomousContinuous(void)	
+	{
+		
 	}
 
-	void TeleopContinuous(void) {
+	void TeleopContinuous(void)
+	{
+		
 	}
 
 
