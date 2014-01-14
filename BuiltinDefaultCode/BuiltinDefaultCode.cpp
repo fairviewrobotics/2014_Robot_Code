@@ -48,7 +48,7 @@ public:
 
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(1, 2, 3, 4);
-		gamePad=new Joystick(1);
+		gamePad = new Joystick(1);
 
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
@@ -96,6 +96,7 @@ public:
 
 	void AutonomousPeriodic(void) {
 	}
+
 	/********************************* Teleop methods *****************************************/
 	void MotorControlLeft(float speed) 
 	{
@@ -122,22 +123,22 @@ public:
 	void ShiftLow(void) 
 	{
 		// shiftRight->Get() : false is low gear, true is high gear
-		if(shiftRight->Get()) 
-		{
+		if(shiftRight->Get()) {
 			shiftRight->Set(false);
 			shiftLeft->Set(false);
 		}
 	}
-	
-	bool flag=true; //flag object initial declaration to ensure passing Piston toggle works properly
-	 
-	void TeleopPeriodic(void) 
+
+	void TeleopPeriodic(void)
 	{
+		bool flag = true; //flag object initial declaration to ensure passing Piston toggle works properly
+
 		float leftStick  = gamePad->GetRawAxis(4);
 		float rightStick = gamePad->GetRawAxis(2);
-		bool rightBumper = gamePad->GetRawButton(8); // Button not actually the right one
-		bool leftBumper  = gamePad->GetRawButton(9); // Button not actually the right one
-		bool buttonA = gamePad->GetRawButton(1);	 // Button not actually the right one
+		bool rightBumper = gamePad->GetRawButton(6);
+		bool leftBumper  = gamePad->GetRawButton(5);
+		bool buttonA     = gamePad->GetRawButton(2);
+
 		if(fabs(leftStick) >= 0.05 || fabs(rightStick >= 0.05)) 
 			{
 				m_robotDrive->TankDrive(leftStick, rightStick);
@@ -155,14 +156,14 @@ public:
 			}
 		else if(buttonA && flag)
 			{
-				flag=false;
+				flag = false;
 				passingPiston->Set(true);
 			}
 		 else
 		 	{
 				if(!buttonA)
 				{
-					flag=false;
+					flag = false;
 					MotorControlLeft(0.0);
 					MotorControlRight(0.0);
 				}
@@ -176,7 +177,9 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
-	void DisabledContinuous(void) {
+	void DisabledContinuous(void)
+	{
+
 	}
 
 	void AutonomousContinuous(void)	
