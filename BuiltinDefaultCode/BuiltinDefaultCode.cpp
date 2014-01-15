@@ -28,6 +28,13 @@ class BuiltinDefaultCode : public IterativeRobot {
 	Solenoid *shiftRight;
 	Solenoid *shiftLeft;
 	Solenoid *passingPiston;
+	
+	// Gyro
+	Gyro *mainGyro;
+	
+	// Encoders
+	Encoder *leftEncoder;
+	Encoder *rightEncoder;
 		
 public:
 /**
@@ -45,7 +52,9 @@ public:
 		right_2 = new Victor(4);
 		shiftRight = new Solenoid(1);
 		shiftLeft  = new Solenoid(2);
-
+		mainGyro = new Gyro(5);
+		leftEncoder = new Encoder(6);
+		rightencoder = new Encoder(7);
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(1, 2, 3, 4);
 		gamePad = new Joystick(1);
@@ -74,6 +83,7 @@ public:
 		shiftRight->Set(false); //low gear
 		passingPiston->Set(false); //retracted
 		printf("RobotInit() completed.\n");
+
 	}
 	
 	void DisabledInit(void) {
@@ -82,6 +92,7 @@ public:
 
 	void AutonomousInit(void) {
 		m_autoPeriodicLoops = 0; // Reset the loop counter for autonomous mode
+		mainGyro->Reset();       // Assures us gyro starts at 0 degrees
 	}
 
 	void TeleopInit(void) {
@@ -95,16 +106,17 @@ public:
 	}
 
 	void AutonomousPeriodic(void) {
+		
 	}
 
 	/********************************* Teleop methods *****************************************/
-	void MotorControlLeft(float speed) 
+	void motorControlLeft(float speed) 
 	{
 		left_1->SetSpeed(speed);
 		left_2->SetSpeed(speed);
 	}
 
-	void MotorControlRight(float speed)
+	void motorControlRight(float speed)
 	{
 		right_1->SetSpeed(speed);
 		right_2->SetSpeed(speed);
@@ -164,26 +176,87 @@ public:
 				if(!buttonA)
 				{
 					flag = false;
-					MotorControlLeft(0.0);
-					MotorControlRight(0.0);
+					motorControlLeft(0.0);
+					motorControlRight(0.0);
 				}
 				else
 				{
-					MotorControlLeft(0.0);
-					MotorControlRight(0.0);
+					motorControlLeft(0.0);
+					motorControlRight(0.0);
 				}
 			}
 	} 
 
 
 	/********************************** Continuous Routines *************************************/
+	void identifyBall(void)
+	{
+		//Get axis camera image apply circular identification algorithm
+	}
+	void intitalShot(int x)
+	{
+		while(encoder<x)
+		{
+		motorControlLeft(1.0);		//move forward for set length determined by encoders position
+		motorControlRight(1.0);
+		}
+		shoot();
+	}
+	void findBall(void)
+	{
+		while(!identifyBall)
+		{
+			
+		}
+	}
+	void seekAndDestroy(void)
+	{
+		
+	}
+	void reposition(void)
+	{
+		turn(0); 			// faces the robot in the initial orientation
+	}
+	void shoot(void)
+	{
+		
+	}
+	void turn(int x)
+	{
+		leftEncoder->reset();
+		rightEncoder->reset();
+		if(int x<=0)
+		{
+			while(mainGyro>x) ///////encoder check with gyro this code is psuedo for the sake of outline not actual content of the while loop 
+								//// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
+			{
+				motorControlLeft(-0.5);
+				motorControlRight(0.5);
+			}
+		}
+		else
+		{
+			while(mainGyro<x) ////////Encoder -> turn radius shit here check with gyro 
+			{
+				motorControlleft(0.5);
+				motorControlRight(-0.5);
+			}
+		}
+	}
+	
 	void DisabledContinuous(void)
 	{
 
 	}
-
+	
 	void AutonomousContinuous(void)	
 	{
+		initialShot();
+		findBall();
+		seekAndDestroy();
+		reposition();
+		shoot();
+		
 		
 	}
 
