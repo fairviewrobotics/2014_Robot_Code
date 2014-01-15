@@ -1,19 +1,18 @@
-2014_Robot_Code
+2014 Robot Code
 ===============
 
-Hello Everyone! 
-Welcome to FRC 2014 with Fairview High School!
+Hello Everyone!<br>
+Welcome to FRC 2014 with Fairview High School!<br>
 This will be our working repository for the season.
 
 An AWESOME (free) tutorial for git can be found [here](http://www.codeschool.com/courses/try-git)! Learn it!
 
-Repository Rules:
-1) The master branch is **protected**! This means you can not commit to master. 
-	(See Procedure #2 on how to get your code approved into master.)
+Repository Rules:<br>
+1) The master branch is **protected**! This means you can not commit to master.<br>
+	(See Procedure #2 on how to get your code approved into master.)<br>
 	The reason for this is so that we can keep the master branch working at all times.
 
-2) Work on the development branch or feature branch. Try to follow the rules outlined [here](http://nvie.com/posts/a-successful-git-branching-model/)
-
+2) Work on the development branch or feature branch. Try to follow the rules outlined [here](http://nvie.com/posts/a-successful-git-branching-model/).
 
 Procedure:
 0.5) Check out the repo with `git clone https://github.com/fairviewrobotics/2014_Robot_Code.git`
