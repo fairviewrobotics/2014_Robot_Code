@@ -105,8 +105,17 @@ public:
 	void DisabledPeriodic(void) {
 	}
 
-	void AutonomousPeriodic(void) {
-		
+	void AutonomousPeriodic(void) 
+	{
+		initialShot();
+		findBall();
+		seekAndDestroy();
+		reposition();
+		shoot();
+		findBall();
+		seekAndDestroy();
+		reposition();
+		shoot();
 	}
 
 	/********************************* Teleop methods *****************************************/
@@ -251,44 +260,13 @@ public:
 	
 	void AutonomousContinuous(void)	
 	{
-		initialShot();
-		findBall();
-		seekAndDestroy();
-		reposition();
-		shoot();
-		
-		
+
 	}
 
 	void TeleopContinuous(void)
 	{
 		
 	}
-
-
-	/********************************** Miscellaneous Routines *************************************/
-
-	/**
-	 * Clear KITT-style LED display on the solenoids
-	 * 
-	 * Clear the solenoid LEDs used for a KITT-style LED display.
-	 */	
-
-	/**
-	 * Generate KITT-style LED display on the solenoids
-	 * 
-	 * This method expects to be called during each periodic loop, with the argument being the 
-	 * loop number for the current loop.
-	 * 
-	 * The goal here is to generate a KITT-style LED display.  (See http://en.wikipedia.org/wiki/KITT )
-	 * However, since the solenoid module has two scan bars, we can have ours go in opposite directions!
-	 * The scan bar is written to have a period of one second with six different positions.
-	 */
-
-	/**
-	 * Display a given four-bit value in binary on the given solenoid LEDs
-	 */
-
 };
 
 START_ROBOT_CLASS(BuiltinDefaultCode);
