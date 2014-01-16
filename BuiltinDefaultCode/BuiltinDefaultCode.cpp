@@ -198,7 +198,7 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
-	void identifyBall(void)
+	boolean identifyBall(void)
 	{
 		//Get axis camera image apply circular identification algorithm
 	}
@@ -213,14 +213,19 @@ public:
 	}
 	void findBall(void)
 	{
-		while(!identifyBall)
+		while(!identifyBall) //assumes identifyBall returns true if ball is centered
 		{
-			
+			motorControlLeft(-0.5);
+			motorControlRight(0.5);
 		}
 	}
 	void seekAndDestroy(void)
 	{
-		
+		while(identifyBall)
+		{
+			motorControlLeft(x); //x is the max value for the motors.
+			motorControlRight(x);
+		}
 	}
 	void reposition(void)
 	{
