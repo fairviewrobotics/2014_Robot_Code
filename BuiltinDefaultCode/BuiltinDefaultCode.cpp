@@ -1,5 +1,6 @@
 #include "WPILib.h"
 #include <math.h>
+#include <HSLImage.h>
 
 class BuiltinDefaultCode : public IterativeRobot {
 	// Declare variable for the robot drive system
@@ -35,6 +36,9 @@ class BuiltinDefaultCode : public IterativeRobot {
 	// Encoders
 	Encoder *leftEncoder;
 	Encoder *rightEncoder;
+	
+	//Axis Camera
+	AxisCamera * camera;
 		
 public:
 /**
@@ -201,6 +205,9 @@ public:
 	boolean identifyBall(void)
 	{
 		//Get axis camera image apply circular identification algorithm
+		HSLImage image = new HSLIImage(); //should we use HSLImage or RGBImage?
+		image = camera -> GetImage(); //gets a new image. check my syntax on this...
+		
 	}
 	void intitalShot(int x)
 	{
