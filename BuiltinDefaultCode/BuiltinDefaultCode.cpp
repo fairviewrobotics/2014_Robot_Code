@@ -211,7 +211,7 @@ public:
 		}
 		shoot();
 	}
-	void findBall(void)
+	void findBall(void)//1
 	{
 		while(!identifyBall) //assumes identifyBall returns true if ball is centered
 		{
@@ -219,7 +219,7 @@ public:
 			motorControlRight(0.5);
 		}
 	}
-	void seekAndDestroy(void)
+	void seekAndDestroy(void)//2
 	{
 		while(identifyBall)
 		{
@@ -227,11 +227,11 @@ public:
 			motorControlRight(x);
 		}
 	}
-	void reposition(void)
+	void reposition(void)//3
 	{
 		turn(0); 			// faces the robot in the initial orientation
 	}
-	void shoot(void)
+	void shoot(void)//4
 	{
 		
 	}
