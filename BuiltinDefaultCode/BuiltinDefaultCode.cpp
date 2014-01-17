@@ -24,22 +24,22 @@ class BuiltinDefaultCode : public IterativeRobot {
         Victor *left_2;
         Victor *right_1;
         Victor *right_2;
-
-        // Solenoids
-        Solenoid *shiftRight;
-        Solenoid *shiftLeft;
-        Solenoid *passingPiston;
-        
-        // Gyro
-        Gyro *mainGyro;
-        
-        // Encoders
-        Encoder *leftEncoder;
-        Encoder *rightEncoder;
-        
-        //Axis Camera
-        AxisCamera * camera;
-                
+		
+	// Solenoids
+	Solenoid *shiftRight;
+	Solenoid *shiftLeft;
+	Solenoid *passingPiston;
+	
+	// Gyro
+	Gyro *mainGyro;
+	
+	// Encoders
+	Encoder *leftEncoder;
+	Encoder *rightEncoder;
+	
+	//Axis Camera
+	AxisCamera * camera;
+		
 public:
 /**
  * Constructor for this "BuiltinDefaultCode" Class.
@@ -201,72 +201,73 @@ public:
         } 
 
 
-        /********************************** Continuous Routines *************************************/
-        boolean identifyBall(void)
-        {
-                //Get axis camera image apply circular identification algorithm
-                HSLImage image = new HSLIImage(); //should we use HSLImage or RGBImage?
-                image = camera -> GetImage(); //gets a new image. check my syntax on this...
-                
-        }
-        void intitalShot(int x)
-        {
-                while(encoder<x)
-                {
-                motorControlLeft(1.0);                //move forward for set length determined by encoders position
-                motorControlRight(1.0);
-                }
-                shoot();
-        }
-        void findBall(void)//1
-        {
-                while(!identifyBall) //assumes identifyBall returns true if ball is centered
-                {
-                        motorControlLeft(-0.5);
-                        motorControlRight(0.5);
-                }
-        }
-        void seekAndDestroy(void)//2
-        {
-                while(identifyBall)
-                {
-                        motorControlLeft(x); //x is the max value for the motors.
-                        motorControlRight(x);
-                }
-        }
-        void reposition(void)//3
-        {
-                turn(0);                         // faces the robot in the initial orientation
-        }
-        void shoot(void)//4
-        {
-                
-        }
-        void turn(int x)
-        {
-                leftEncoder->reset();
-                rightEncoder->reset();
-                if(int x<=0)
-                {
-                        while(mainGyro>x) ///////encoder check with gyro this code is psuedo for the sake of outline not actual content of the while loop 
-                                                                //// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
-                        {
-                                motorControlLeft(-0.5);
-                                motorControlRight(0.5);
-                        }
-                }
-                else
-                {
-                        while(mainGyro<x) ////////Encoder -> turn radius shit here check with gyro 
-                        {
-                                motorControlleft(0.5);
-                                motorControlRight(-0.5);
-                        }
-                }
-        }
-        
-        void DisabledContinuous(void)
-        {
+	/********************************** Continuous Routines *************************************/
+	boolean identifyBall(void)
+	{
+		//Get axis camera image apply circular identification algorithm
+		HSLImage image = new HSLIImage(); //should we use HSLImage or RGBImage?
+		image = camera -> GetImage(); //gets a new image. check my syntax on this...
+		
+	}
+	void intitalShot(int x)
+	{
+		while(encoder<x)
+		{
+		motorControlLeft(1.0);		//move forward for set length determined by encoders position
+		motorControlRight(1.0);
+		}
+		shoot();
+	}
+	void findBall(void)//1
+	{
+		while(!identifyBall) //assumes identifyBall returns true if ball is centered
+		{
+			motorControlLeft(-0.5);
+			motorControlRight(0.5);
+		}
+	}
+	void seekAndDestroy(void)//2
+	{
+		while(identifyBall)
+		{
+			motorControlLeft(x); //x is the max value for the motors.
+			motorControlRight(x);
+		}
+	}
+	void reposition(void)//3
+	{
+		turn(0); 			// faces the robot in the initial orientation
+	}
+	void shoot(void)//4
+	{
+		
+	}
+	void turn(int x)
+	{
+		leftEncoder->reset();
+		rightEncoder->reset();
+		if(int x<=0)
+		{
+			while(mainGyro>x) ///////encoder check with gyro this code is psuedo for the sake of outline not actual content of the while loop 
+								//// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
+			{
+				motorControlLeft(-0.5);
+				motorControlRight(0.5);
+			}
+		}
+		else
+		{
+			while(mainGyro<x) ////////Encoder -> turn radius shit here check with gyro 
+			{
+				motorControlleft(0.5);
+				motorControlRight(-0.5);
+			}
+		}
+	}
+	
+	void DisabledContinuous(void)
+	{
+
 
         }
         
