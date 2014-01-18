@@ -205,7 +205,7 @@ public:
 	boolean identifyBall(void)
 	{
 		//Get axis camera image apply circular identification algorithm
-		HSLImage image = new HSLIImage(); //should we use HSLImage or RGBImage?
+		HSLImage image = new HSLImage(); //should we use HSLImage or RGBImage?
 		image = camera -> GetImage(); //gets a new image. check my syntax on this...
 		
 	}
