@@ -1,1 +1,6 @@
+.csettings/
 PPC603gnu/
+.cproject
+.project
+.wrmakefile
+.wrproject

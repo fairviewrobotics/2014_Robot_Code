@@ -1,29 +1,29 @@
 #include "WPILib.h"
 #include <math.h>
-#include <HSLImage.h>
+#include "Vision/HSLImage.h"
 
 class BuiltinDefaultCode : public IterativeRobot {
-        // Declare variable for the robot drive system
-        RobotDrive *m_robotDrive; // Robot will use PWM 1-4 for drive motors
-        
-        // Declare a variable to use to access the driver station object
-        DriverStation *m_ds; // Driver station object
-        UINT32 m_priorPacketNumber; // Keep track of the most recent packet number from the DS
-        UINT8 m_dsPacketsReceivedInCurrentSecond; // Keep track of the DS packets received in the current second
-        
-        // Declare variables for the two joysticks being used
-        Joystick *gamePad; // Joystick 1 (arcade stick or right tank stick)
+	// Declare variable for the robot drive system
+	RobotDrive *m_robotDrive; // Robot will use PWM 1-4 for drive motors
+	
+	// Declare a variable to use to access the driver station object
+	DriverStation *m_ds; // Driver station object
+	UINT32 m_priorPacketNumber; // Keep track of the most recent packet number from the DS
+	UINT8 m_dsPacketsReceivedInCurrentSecond; // Keep track of the DS packets received in the current second
+	
+	// Declare variables for the two joysticks being used
+	Joystick *gamePad; // Joystick 1 (arcade stick or right tank stick)
 
-        // Local variables to count the number of periodic loops performed
-        UINT32 m_autoPeriodicLoops;
-        UINT32 m_disabledPeriodicLoops;
-        UINT32 m_telePeriodicLoops;
+	// Local variables to count the number of periodic loops performed
+	UINT32 m_autoPeriodicLoops;
+	UINT32 m_disabledPeriodicLoops;
+	UINT32 m_telePeriodicLoops;
 
-        // Motor controllers
-        Victor *left_1;
-        Victor *left_2;
-        Victor *right_1;
-        Victor *right_2;
+	// Motor controllers
+	Victor *left_1;
+	Victor *left_2;
+	Victor *right_1;
+	Victor *right_2;
 		
 	// Solenoids
 	Solenoid *shiftRight;
@@ -36,10 +36,11 @@ class BuiltinDefaultCode : public IterativeRobot {
 	// Encoders
 	Encoder *leftEncoder;
 	Encoder *rightEncoder;
+	Encoder *shooterEncoder; // Not sure if this is actually needed
 	
-	//Axis Camera
-	AxisCamera * camera;
-		
+	// Axis Camera
+	AxisCamera *camera;
+
 public:
 /**
  * Constructor for this "BuiltinDefaultCode" Class.
@@ -57,8 +58,9 @@ public:
                 shiftRight = new Solenoid(1);
                 shiftLeft  = new Solenoid(2);
                 mainGyro = new Gyro(5);
-                leftEncoder = new Encoder(6);
-                rightencoder = new Encoder(7);
+                leftEncoder    = new Encoder(6, 8); // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
+                rightEncoder   = new Encoder(7, 9); // Same here
+                shooterEncoder = new Encoder(10, 11); // Also same here
                 // Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
                 m_robotDrive = new RobotDrive(1, 2, 3, 4);
                 gamePad = new Joystick(1);
@@ -101,7 +103,7 @@ public:
 
         void TeleopInit(void) {
                 m_telePeriodicLoops = 0; // Reset the loop counter for teleop mode
-                m_dsPacketsReceivedInCurrentSecond = 0;        // Reset the number of dsPackets in current second
+                m_dsPacketsReceivedInCurrentSecond = 0; // Reset the number of dsPackets in current second
         }
 
         /********************************** Periodic Routines *************************************/
@@ -111,7 +113,7 @@ public:
 
         void AutonomousPeriodic(void) 
         {
-                initialShot();
+                initialShot(1); // 1 is a temporary value.
                 findBall();
                 seekAndDestroy();
                 reposition();
@@ -137,7 +139,7 @@ public:
 
         void ShiftHigh(void) 
         {
-                // shiftRight->Get() : false is low gear, true is high gear
+                // shiftRight->Get() return value: false is low gear, true is high gear
                 if(!(shiftRight->Get())) 
                 {
                         shiftRight->Set(true);
@@ -147,7 +149,7 @@ public:
 
         void ShiftLow(void) 
         {
-                // shiftRight->Get() : false is low gear, true is high gear
+                // shiftRight->Get() return value: false is low gear, true is high gear
                 if(shiftRight->Get()) {
                         shiftRight->Set(false);
                         shiftLeft->Set(false);
@@ -156,7 +158,7 @@ public:
 
         void TeleopPeriodic(void)
         {
-                bool flag = true; //flag object initial declaration to ensure passing Piston toggle works properly
+                bool flag = true; // Flag object initial declaration to ensure passing piston toggle works properly
 
                 float leftStick  = gamePad->GetRawAxis(4);
                 float rightStick = gamePad->GetRawAxis(2);
@@ -202,54 +204,62 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
-	boolean identifyBall(void)
+	bool identifyBall(void)
 	{
-		//Get axis camera image apply circular identification algorithm
-		HSLImage image = new HSLIImage(); //should we use HSLImage or RGBImage?
-		image = camera -> GetImage(); //gets a new image. check my syntax on this...
+		// Get axis camera image apply circular identification algorithm.
+		HSLImage *image = new HSLImage(); // should we use HSLImage or RGBImage?
+		image = camera -> GetImage(); // gets a new image. check my syntax on this...
 		
+		return false; // Temporary until this function actually works...
 	}
-	void intitalShot(int x)
+
+	void initialShot(int x)
 	{
-		while(encoder<x)
+		while(shooterEncoder->Get() < x)
 		{
-		motorControlLeft(1.0);		//move forward for set length determined by encoders position
-		motorControlRight(1.0);
+			motorControlLeft(1.0); // Move forward for set length determined by encoders position
+			motorControlRight(1.0);
 		}
 		shoot();
 	}
-	void findBall(void)//1
+
+	void findBall(void) // 1
 	{
-		while(!identifyBall) //assumes identifyBall returns true if ball is centered
+		while(!identifyBall()) // Assumes identifyBall returns true if ball is centered
 		{
 			motorControlLeft(-0.5);
 			motorControlRight(0.5);
 		}
 	}
-	void seekAndDestroy(void)//2
+
+	void seekAndDestroy(void) // 2
 	{
-		while(identifyBall)
+		float x = 1.0; // temporary value
+		while(identifyBall())
 		{
-			motorControlLeft(x); //x is the max value for the motors.
+			motorControlLeft(x); // x is the max value for the motors.
 			motorControlRight(x);
 		}
 	}
-	void reposition(void)//3
+
+	void reposition(void) // 3
 	{
-		turn(0); 			// faces the robot in the initial orientation
+		turn(0); // Faces the robot in the initial orientation
 	}
-	void shoot(void)//4
+
+	void shoot(void) // 4
 	{
 		
 	}
+
 	void turn(int x)
 	{
-		leftEncoder->reset();
-		rightEncoder->reset();
-		if(int x<=0)
+		leftEncoder->Reset();
+		rightEncoder->Reset();
+		if(x <= 0)
 		{
-			while(mainGyro>x) ///////encoder check with gyro this code is psuedo for the sake of outline not actual content of the while loop 
-								//// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
+			while(mainGyro->GetAngle() > x) // encoder check with gyro this code is psuedo for the sake of outline not actual content of the while loop 
+								// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
 			{
 				motorControlLeft(-0.5);
 				motorControlRight(0.5);
@@ -257,9 +267,9 @@ public:
 		}
 		else
 		{
-			while(mainGyro<x) ////////Encoder -> turn radius shit here check with gyro 
+			while(mainGyro->GetAngle() < x) // Encoder -> turn radius shit here check with gyro 
 			{
-				motorControlleft(0.5);
+				motorControlLeft(0.5);
 				motorControlRight(-0.5);
 			}
 		}
