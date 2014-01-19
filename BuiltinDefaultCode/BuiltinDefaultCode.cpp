@@ -113,11 +113,11 @@ public:
 	void AutonomousPeriodic(void) 
 	{
 		initialShot(1); // 1 is a temporary value.
-		findBall();
+		centerRobot();
 		seekAndDestroy();
 		reposition();
 		shoot();
-		findBall();
+		centerRobot();
 		seekAndDestroy();
 		reposition();
 		shoot();
@@ -203,13 +203,12 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
-	bool identifyBall(void)
+	int identifyBall(void)
 	{
 		// Get axis camera image apply circular identification algorithm.
 		HSLImage *image = new HSLImage(); // should we use HSLImage or RGBImage?
-		image = camera -> GetImage(); // gets a new image. check my syntax on this...
-		
-		return false; // Temporary until this function actually works...
+		image = camera -> GetImage(); // gets a new image. check my syntax on this.
+		return 0; //temp						
 	}
 
 	void initialShot(int x)
@@ -222,11 +221,12 @@ public:
 		shoot();
 	}
 
-	void findBall(void) // 1
+	void centerRobot(void) // 1
 	{
 		while(!identifyBall()) // Assumes identifyBall returns true if ball is centered
 		{
-			motorControlLeft(-0.5);
+			motorControlLeft(-0.5); //// this method needs to take an int 0,1,2,3 from the identifyBall method based off the location of the ball
+									// where 0 means the ball is too the left, 1 the ball is centered, and 2 the ball is to the right, 3, the ball is not onscreen
 			motorControlRight(0.5);
 		}
 	}
@@ -234,10 +234,12 @@ public:
 	void seekAndDestroy(void) // 2
 	{
 		float x = 1.0; // temporary value
-		while(identifyBall())
+		while(!limiterSwitch)    /// There will be a limiter switch in the catapault mechanism the robot should ceck to see if it captured the ball with this.
 		{
+			if(centerRobot==1)
 			motorControlLeft(x); // x is the max value for the motors.
-			motorControlRight(x);
+			motorControlRight(x); // this method should call the turn method based off of input from the find ball method, adjusting the angle first
+									// centering the robot on the ball then driving to the ball 
 		}
 	}
 
