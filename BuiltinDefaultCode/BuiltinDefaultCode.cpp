@@ -40,6 +40,8 @@ class BuiltinDefaultCode : public IterativeRobot {
 	
 	// Axis Camera
 	AxisCamera *camera;
+	
+	
 
 public:
 	/**
@@ -74,6 +76,10 @@ public:
 		m_autoPeriodicLoops = 0;
 		m_disabledPeriodicLoops = 0;
 		m_telePeriodicLoops = 0;
+		
+		//Declare (x,y) coordinates of the robot on the field.
+		double x;
+		double y;
 
 		printf("BuiltinDefaultCode Constructor Completed\n");
 	}
@@ -103,6 +109,11 @@ public:
 	void TeleopInit(void) {
 		m_telePeriodicLoops = 0; // Reset the loop counter for teleop mode
 		m_dsPacketsReceivedInCurrentSecond = 0; // Reset the number of dsPackets in current second
+	}
+	
+	void SetCoordinates(void) {
+		x = 0;//manually input x and y coordinates
+		y = 0;
 	}
 
 	/********************************** Periodic Routines *************************************/
@@ -203,6 +214,12 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
+	boolean turn(void)
+	{
+		
+	}
+	
+	
 	int identifyBall(void)
 	{
 <<<<<<< HEAD
