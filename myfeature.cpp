@@ -11,6 +11,8 @@ double CalculateFromTurn(double Ri, double Rf, double Li, double Lf, double r, d
 	return Nangle+angle;
 }
 
+{
+}
 void CalculateFromStraight(double Rf, double Ri, double Lf, double Li, double angle, double x, double y)
 {
 	double dl = Lf - Li;

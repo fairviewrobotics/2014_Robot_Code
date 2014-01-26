@@ -78,8 +78,14 @@ public:
 		m_telePeriodicLoops = 0;
 		
 		//Declare (x,y) coordinates of the robot on the field.
-		double x;
-		double y;
+		double m_x;
+		double m_y;
+
+        //Declare angle of the robot.
+        double angle;
+
+        //Set radians per pulse for encoder.
+        Encoder::SetDistancePerPulse(.00460243323);
 
 		printf("BuiltinDefaultCode Constructor Completed\n");
 	}
@@ -122,7 +128,7 @@ public:
 	}
 
 	void AutonomousPeriodic(void) 
-	{
+    {
 		initialShot(1); // 1 is a temporary value.
 		centerRobot();
 		seekAndDestroy();
@@ -214,10 +220,7 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
-	boolean turn(void)
-	{
-		
-	}
+    
 	
 	
 	int identifyBall(void)
@@ -277,29 +280,99 @@ public:
 		
 	}
 
-	void turn(int x)
+	void turn(int x)//x is an angle in radians. Left turn is positive. Right turn is negative. 
 	{
 		leftEncoder->Reset();
 		rightEncoder->Reset();
+        double R = rightEncoder -> GetDistance();
+        double L = leftEncoder -> GetDistance();
 		if(x <= 0)
 		{
-			while(mainGyro->GetAngle() > x) // encoder check with gyro this code is psuedo for the sake of outline not actual content of the while loop 
+			while(tempangle > x) 
 								// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
 			{
 				motorControlLeft(-0.5);
 				motorControlRight(0.5);
+                double R = rightEncoder -> GetDistance();
+                double L = leftEncoder -> GetDistance();
+                double tempangle = getAngleFromTurn(R,L,r); //r is the distance from the center of the robot to the wheels.
 			}
 		}
 		else
 		{
-			while(mainGyro->GetAngle() < x) // Encoder -> turn radius shit here check with gyro
+			while( tempangle < x) // Encoder -> turn radius shit here check with gyro
 			{
 				motorControlLeft(0.5);
 				motorControlRight(-0.5);
+                double R = rightEncoder -> getDistance();
+                double L = leftEncoder -> getDistance();
+                double tempangle = getAngleFromTurn(R,L,r); 
 			}
 		}
+
 	}
+
+    void straight(double d)
+    {
+        leftEncoder -> reset();
+        rightEncoder -> reset();
+        double x = 0;
+        if (d == 0)
+        {
+
+        }
+
+        else if (d > 0)
+        {
+            double templ;
+            double tempr;
+            while (x < d)
+            {
+               motorControlRight(.5);
+               motorControlLeft(.5);
+               templ = leftEncoder -> getDistance();
+               tempr = rightEncoder -> getDistance();
+               x = (tempr + templ)/2;
+            }
+            updateCoordinates();
+        }
+        else
+        {
+            double templ;
+            double tempr;
+            while (x > d)
+            {
+                 motorControlRight(-.5);
+                 motorControlLeft(-.5);
+                 templ = leftEncoder -> getDistance();
+                 tempr = rightEncoder -> getDistance();
+                 x = (tempr + templ)/2;
+            }
+            updateCoordinates();
+           
+        }
+    }
+
+    void updateCoordinates()
+    {
+        double R = rightEncoder -> getDistance();
+        double L = leftEncoder -> getDistance();
+        double d = (R+L)/2;
+        m_x += d * sin(angle);
+        m_y += d * cos(angle);
+
+    }
 	
+    double getAngleFromTurn(double R, double L, double r)
+    {
+        double LAngle = -L/r;
+        double RAngle = R/r;
+        double NAngle = (LAngle + RAngle)/2;
+        return NAngle;
+    }
+
+
+
 	void DisabledContinuous(void)
 	{
 
