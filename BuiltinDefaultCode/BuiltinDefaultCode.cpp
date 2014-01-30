@@ -205,15 +205,7 @@ public:
 	/********************************** Continuous Routines *************************************/
 	int identifyBall(void)
 	{
-<<<<<<< HEAD
-		//Get axis camera image apply circular identification algorithm
-		HSLImage image = new HSLImage(); //should we use HSLImage or RGBImage?
-		image = camera -> GetImage(); //gets a new image. check my syntax on this...
-=======
-		// Get axis camera image apply circular identification algorithm.
-		Image* cameraImage = new RGBImage(); // should we use HSLImage or RGBImage?
-		image = camera -> GetImage(); // gets a new image. check my syntax on this.
->>>>>>> e3c71ab4c9c558b3566e4ecd215470ff331b4464
+		
 		
 		return 0; //temp						
 	}
