@@ -40,6 +40,9 @@ class BuiltinDefaultCode : public IterativeRobot {
 	
 	// Axis Camera
 	AxisCamera *camera;
+	
+	// Limit switches
+	DigitalInput *limitSwitch;
 
 public:
 	/**
@@ -64,6 +67,8 @@ public:
 		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
 		m_robotDrive = new RobotDrive(1, 2, 3, 4);
 		gamePad = new Joystick(1);
+		
+		limitSwitch = new DigitalInput(1); // 1 is a placeholder for the Digital Input location
 
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
@@ -205,8 +210,10 @@ public:
 	/********************************** Continuous Routines *************************************/
 	int identifyBall(void)
 	{
-		
-		
+		// Get axis camera image apply circular identification algorithm.
+		HSLImage* cameraImage = new HSLImage(); // should we use HSLImage or RGBImage?
+		cameraImage = camera -> GetImage(); // gets a new image. check my syntax on this.
+
 		return 0; //temp						
 	}
 
@@ -220,25 +227,28 @@ public:
 		shoot();
 	}
 
-	void centerRobot(void) // 1
+	bool centerRobot(void) // 1
 	{
 		while(!identifyBall()) // Assumes identifyBall returns true if ball is centered
 		{
-			motorControlLeft(-0.5); //// this method needs to take an int 0,1,2,3 from the identifyBall method based off the location of the ball
-									// where 0 means the ball is too the left, 1 the ball is centered, and 2 the ball is to the right, 3, the ball is not onscreen
+			motorControlLeft(-0.5); // This method needs to take an int 0,1,2,3 from the identifyBall method based off the location of the ball
+									// Where 0 means the ball is too the left, 1 the ball is centered, and 2 the ball is to the right, 3, the ball is not onscreen
 			motorControlRight(0.5);
 		}
+		return true; // Temporary value
 	}
 
 	void seekAndDestroy(void) // 2
 	{
-		float x = 1.0; // temporary value
-		while(!limiterSwitch)    /// There will be a limiter switch in the catapault mechanism the robot should ceck to see if it captured the ball with this.
+		float x = 1.0; // Temporary value
+		while(!limitSwitch->Get())    // There will be a limiter switch in the catapault mechanism the robot should check to see if it captured the ball with this.
 		{
-			if(centerRobot==1)
-			motorControlLeft(x); // x is the max value for the motors.
-			motorControlRight(x); // this method should call the turn method based off of input from the find ball method, adjusting the angle first
-									// centering the robot on the ball then driving to the ball 
+			if(centerRobot())
+			{
+				motorControlLeft(x);  // x is the max value for the motors.
+				motorControlRight(x); // This method should call the turn method based off of input from the find ball method, adjusting the angle first
+									  // Centering the robot on the ball then driving to the ball 
+			}
 		}
 	}
 
