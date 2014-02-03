@@ -20,10 +20,10 @@ class BuiltinDefaultCode : public IterativeRobot {
 	UINT32 m_telePeriodicLoops;
 
 	// Motor controllers
-	Victor *left_1;
-	Victor *left_2;
-	Victor *right_1;
-	Victor *right_2;
+	Talon *left_1;
+	Talon *left_2;
+	Talon *right_1;
+	Talon *right_2;
 		
 	// Solenoids
 	Solenoid *shiftRight;
@@ -36,7 +36,7 @@ class BuiltinDefaultCode : public IterativeRobot {
 	// Encoders
 	Encoder *leftEncoder;
 	Encoder *rightEncoder;
-	Encoder *shooterEncoder; // Not sure if this is actually needed
+	Encoder *shooterEncoder; // Not sure if this is actually needed I think so unless we are using a limit switch 
 	
 	// Axis Camera
 	AxisCamera *camera;
@@ -54,18 +54,17 @@ public:
 	 */
 	BuiltinDefaultCode(void) {
 		printf("BuiltinDefaultCode Constructor Started\n");
-		left_1  = new Victor(1);
-		left_2  = new Victor(2);
-		right_1 = new Victor(3);
-		right_2 = new Victor(4);
+		left_1  = new Talon(1);
+		left_2  = new Talon(2);
+		right_1 = new Talon(3);
+		right_2 = new Talon(4);
 		shiftRight = new Solenoid(1);
 		shiftLeft  = new Solenoid(2);
 		mainGyro = new Gyro(5);
 		leftEncoder    = new Encoder(6, 8); // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
 		rightEncoder   = new Encoder(7, 9); // Same here
 		shooterEncoder = new Encoder(10, 11); // Also same here
-		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
-		m_robotDrive = new RobotDrive(1, 2, 3, 4);
+		
 		gamePad = new Joystick(1);
 		
 		limitSwitch = new DigitalInput(1); // 1 is a placeholder for the Digital Input location
@@ -166,15 +165,13 @@ public:
 
 		float leftStick  = gamePad->GetRawAxis(4);
 		float rightStick = gamePad->GetRawAxis(2);
+		
 		bool rightBumper = gamePad->GetRawButton(6);
 		bool leftBumper  = gamePad->GetRawButton(5);
+		
 		bool buttonA     = gamePad->GetRawButton(2);
-
-		if(fabs(leftStick) >= 0.05 || fabs(rightStick >= 0.05)) 
-		{
-			m_robotDrive->TankDrive(leftStick, rightStick);
-		}
-		else if(rightBumper || leftBumper) 
+		
+		if(rightBumper || leftBumper) 
 		{
 			if(rightBumper && !leftBumper) 
 			{
@@ -188,22 +185,18 @@ public:
 		else if(buttonA && flag)
 		{
 			flag = false;
-			passingPiston->Set(true);
+			passingPiston->Set(!(passingPiston->Get()));	// flag reset to false while button a is not held to avoid continuous switching while a button is held
 		}
-		else
+		else if(!buttonA)
 		{
-			if(!buttonA)
-			{
 				flag = false;
-				motorControlLeft(0.0);
-				motorControlRight(0.0);
+				motorControlLeft(leftStick);
+				motorControlRight(rightStick);
+		
 			}
-			else
-			{
-				motorControlLeft(0.0);
-				motorControlRight(0.0);
-			}
-		}
+			
+			motorControlLeft(leftStick);
+			motorControlRight(rightStick); // motor speed declarations done at the end to ensure watchdog is continually updated.
 	} 
 
 
