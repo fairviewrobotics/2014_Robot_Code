@@ -1,29 +1,42 @@
 #include "WPILib.h"
 #include <math.h>
 #include "Vision/HSLImage.h"
+#define X_IMAGE_RES 320		//X Image resolution in pixels, should be 160, 320 or 640
+#define VIEW_ANGLE 48		//Axis 206 camera
+//#define VIEW_ANGLE 43.5  //Axis M1011 camera
+#define PI 3.141592653
+
+//Score limits used for target identification
+#define RECTANGULARITY_LIMIT 60
+#define ASPECT_RATIO_LIMIT 75
+#define X_EDGE_LIMIT 40
+#define Y_EDGE_LIMIT 60
+
+//Minimum area of particles to be considered
+#define AREA_MINIMUM 500
+
+//Edge profile constants used for hollowness score calculation
+#define XMAXSIZE 24
+#define XMINSIZE 24
+#define YMAXSIZE 24
+#define YMINSIZE 48
+const double xMax[XMAXSIZE] = {1, 1, 1, 1, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, 1, 1, 1, 1};
+const double xMin[XMINSIZE] = {.4, .6, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, 0.6, 0};
+const double yMax[YMAXSIZE] = {1, 1, 1, 1, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, 1, 1, 1, 1};
+const double yMin[YMINSIZE] = {.4, .6, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05,
+								.05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05,
+								.05, .05, .6, 0};
+const double RectHotGoalRatio = 0.95;
 
 class BuiltinDefaultCode : public IterativeRobot {
-	// Declare variable for the robot drive system
-	RobotDrive *m_robotDrive; // Robot will use PWM 1-4 for drive motors
-	
-	// Declare a variable to use to access the driver station object
-	DriverStation *m_ds; // Driver station object
-	UINT32 m_priorPacketNumber; // Keep track of the most recent packet number from the DS
-	UINT8 m_dsPacketsReceivedInCurrentSecond; // Keep track of the DS packets received in the current second
-	
-	// Declare variables for the two joysticks being used
-	Joystick *gamePad; // Joystick 1 (arcade stick or right tank stick)
 
-	// Local variables to count the number of periodic loops performed
-	UINT32 m_autoPeriodicLoops;
-	UINT32 m_disabledPeriodicLoops;
-	UINT32 m_telePeriodicLoops;
 
 	// Motor controllers
 	Talon *left_1;
 	Talon *left_2;
 	Talon *right_1;
 	Talon *right_2;
+	Victor *zoidberg;
 		
 	// Solenoids
 	Solenoid *shiftRight;
@@ -45,22 +58,20 @@ class BuiltinDefaultCode : public IterativeRobot {
 	DigitalInput *limitSwitch;
 
 public:
-	/**
-	 * Constructor for this "BuiltinDefaultCode" Class.
-	 * 
-	 * The constructor creates all of the objects used for the different inputs and outputs of
-	 * the robot.  Essentially, the constructor defines the input/output mapping for the robot,
-	 * providing named objects for each of the robot interfaces. 
-	 */
 	BuiltinDefaultCode(void) {
 		printf("BuiltinDefaultCode Constructor Started\n");
+		
 		left_1  = new Talon(1);
 		left_2  = new Talon(2);
 		right_1 = new Talon(3);
 		right_2 = new Talon(4);
+		zoidberg = new Victor(5);
+		
 		shiftRight = new Solenoid(1);
 		shiftLeft  = new Solenoid(2);
+		
 		mainGyro = new Gyro(5);
+		
 		leftEncoder    = new Encoder(6, 8); // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
 		rightEncoder   = new Encoder(7, 9); // Same here
 		shooterEncoder = new Encoder(10, 11); // Also same here
@@ -189,7 +200,7 @@ public:
 		}
 		else if(!buttonA)
 		{
-				flag = false;
+				flag = true;
 				motorControlLeft(leftStick);
 				motorControlRight(rightStick);
 		
@@ -201,15 +212,102 @@ public:
 
 
 	/********************************** Continuous Routines *************************************/
+	
 	int identifyBall(void)
 	{
-		// Get axis camera image apply circular identification algorithm.
-		HSLImage* cameraImage = new HSLImage(); // should we use HSLImage or RGBImage?
-		cameraImage = camera -> GetImage(); // gets a new image. check my syntax on this.
+		
+		Threshold threshold(60, 100, 90, 255, 20, 255);	//HSV threshold criteria, ranges are in that order ie. Hue is 60-100
+		ParticleFilterCriteria2 criteria[] = {
+				{IMAQ_MT_AREA, AREA_MINIMUM, 65535, false, false}
+		};												//Particle filter criteria, used to filter out small particles
+		// AxisCamera &camera = AxisCamera::GetInstance();	//To use the Axis camera uncomment this line
+            /**
+             * Do the image capture with the camera and apply the algorithm described above. This
+             * sample will either get images from the camera or from an image file stored in the top
+             * level directory in the flash memory on the cRIO. The file name in this case is "testImage.jpg"
+             */
+			ColorImage *image;
+			//image = new RGBImage("/testImage.jpg");		// get the sample image from the cRIO flash
 
-		return 0; //temp						
+			camera.GetImage(image);				//To get the images from the camera comment the line above and uncomment this one
+			BinaryImage *thresholdImage = image->ThresholdHSV(threshold);	// get just the green target pixels
+			//thresholdImage->Write("/threshold.bmp");
+			BinaryImage *convexHullImage = thresholdImage->ConvexHull(false);  // fill in partial and full rectangles
+			//convexHullImage->Write("/ConvexHull.bmp");
+			BinaryImage *filteredImage = convexHullImage->ParticleFilter(criteria, 1);	//Remove small particles
+			//filteredImage->Write("Filtered.bmp");
+
+			vector<ParticleAnalysisReport> *reports = filteredImage->GetOrderedParticleAnalysisReports();  //get a particle analysis report for each particle
+			scores = new Scores[reports->size()];
+			
+			//Iterate through each particle, scoring it and determining whether it is a target or not
+			for (unsigned i = 0; i < reports->size(); i++) {
+				ParticleAnalysisReport *report = &(reports->at(i));
+				
+				scores[i].rectangularity = scoreRectangularity(report);
+				scores[i].aspectRatioOuter = scoreAspectRatio(filteredImage, report, true);
+				scores[i].aspectRatioInner = scoreAspectRatio(filteredImage, report, false);			
+				scores[i].xEdge = scoreXEdge(thresholdImage, report);
+				scores[i].yEdge = scoreYEdge(thresholdImage, report);
+				
+				if(scoreCompare(scores[i], false))
+				{
+					printf("particle: %d  is a High Goal  centerX: %f  centerY: %f \n", i, report->center_mass_x_normalized, report->center_mass_y_normalized);
+					printf("Distance: %f \n", computeDistance(thresholdImage, report, false));
+				} else if (scoreCompare(scores[i], true)) {
+					printf("particle: %d  is a Middle Goal  centerX: %f  centerY: %f \n", i, report->center_mass_x_normalized, report->center_mass_y_normalized);
+					printf("Distance: %f \n", computeDistance(thresholdImage, report, true));
+				} else {
+					printf("particle: %d  is not a goal  centerX: %f  centerY: %f \n", i, report->center_mass_x_normalized, report->center_mass_y_normalized);
+				}
+				printf("rect: %f  ARinner: %f \n", scores[i].rectangularity, scores[i].aspectRatioInner);
+				printf("ARouter: %f  xEdge: %f  yEdge: %f  \n", scores[i].aspectRatioOuter, scores[i].xEdge, scores[i].yEdge);	
+			}
+			printf("\n");
+			
+			// be sure to delete images after using them
+			delete filteredImage;
+			delete convexHullImage;
+			delete thresholdImage;
+			delete image;
+			
+			//delete allocated reports and Scores objects also
+			delete scores;
+			delete reports;
+		}
 	}
-
+	
+	
+		double computeDistance (BinaryImage *image, ParticleAnalysisReport *report, bool outer) {
+			double rectShort, height;
+			int targetHeight;
+		
+			imaqMeasureParticle(image->GetImaqImage(), report->particleIndex, 0, IMAQ_MT_EQUIVALENT_RECT_SHORT_SIDE, &rectShort);
+			//using the smaller of the estimated rectangle short side and the bounding rectangle height results in better performance
+			//on skewed rectangles
+			height = min(report->boundingRect.height, rectShort);
+			targetHeight = outer ? 29 : 21;
+		
+			return X_IMAGE_RES * targetHeight / (height * 12 * 2 * tan(VIEW_ANGLE*PI/(180*2)));
+		}
+		double scoreAspectRatio(BinaryImage *image, ParticleAnalysisReport *report, bool outer){
+			double rectLong, rectShort, idealAspectRatio, aspectRatio;
+			idealAspectRatio = outer ? (62/29) : (62/20);	//Dimensions of goal opening + 4 inches on all 4 sides for reflective tape
+		
+			imaqMeasureParticle(image->GetImaqImage(), report->particleIndex, 0, IMAQ_MT_EQUIVALENT_RECT_LONG_SIDE, &rectLong);
+			imaqMeasureParticle(image->GetImaqImage(), report->particleIndex, 0, IMAQ_MT_EQUIVALENT_RECT_SHORT_SIDE, &rectShort);
+		
+			//Divide width by height to measure aspect ratio
+			if(report->boundingRect.width > report->boundingRect.height){
+				//particle is wider than it is tall, divide long by short
+				aspectRatio = 100*(1-fabs((1-((rectLong/rectShort)/idealAspectRatio))));
+			} else {
+				//particle is taller than it is wide, divide short by long
+				aspectRatio = 100*(1-fabs((1-((rectShort/rectLong)/idealAspectRatio))));
+			}
+			return (max(0, min(aspectRatio, 100)));		//force to be in range 0-100
+		}
+		
 	void initialShot(int x)
 	{
 		while(shooterEncoder->Get() < x)
