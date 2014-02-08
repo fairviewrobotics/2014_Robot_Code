@@ -39,8 +39,7 @@ class BuiltinDefaultCode : public IterativeRobot {
 	Victor *zoidberg;
 		
 	// Solenoids
-	Solenoid *shiftRight;
-	Solenoid *shiftLeft;
+	Solenoid *shifter;
 	Solenoid *passingPiston;
 	
 	// Gyro
@@ -49,13 +48,15 @@ class BuiltinDefaultCode : public IterativeRobot {
 	// Encoders
 	Encoder *leftEncoder;
 	Encoder *rightEncoder;
-	Encoder *shooterEncoder; // Not sure if this is actually needed I think so unless we are using a limit switch 
 	
 	// Axis Camera
 	AxisCamera *camera;
 	
 	// Limit switches
-	DigitalInput *limitSwitch;
+	DigitalInput *limitSwitchShooter;
+	
+	// Distance sensor
+	Ultrasonic *distanceSensor;
 
 public:
 	BuiltinDefaultCode(void) {
@@ -67,18 +68,19 @@ public:
 		right_2 = new Talon(4);
 		zoidberg = new Victor(5);
 		
-		shiftRight = new Solenoid(1);
-		shiftLeft  = new Solenoid(2);
+		shifter = new Solenoid(1, 2);
 		
 		mainGyro = new Gyro(5);
 		
 		leftEncoder    = new Encoder(6, 8); // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
 		rightEncoder   = new Encoder(7, 9); // Same here
-		shooterEncoder = new Encoder(10, 11); // Also same here
+		zoidbergEncoder = new Encoder(10, 11); //  potentiometer?
 		
 		gamePad = new Joystick(1);
 		
-		limitSwitch = new DigitalInput(1); // 1 is a placeholder for the Digital Input location
+		limitSwitchShooter = new DigitalInput(1); // 1 is a placeholder for the Digital Input location limit Switch placed on shooter mechanism
+		
+		distanceSensor = new Ultrasonic(9); //9 placeholder.
 
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
@@ -150,23 +152,50 @@ public:
 		right_1->SetSpeed(speed);
 		right_2->SetSpeed(speed);
 	}
+	void moveGobbler(int position){  // 0: 0 degrees 1: 45 degrees 2: 90 degrees?  |_ arm like this, -> is ball 90 degrees, vertical is 0 + is down - is up
+		float speed = 0.25;
+		if(position==0){ //might also be smart to call position as a function of the distance sensor, but only one case, like hey if you sense a ball lower it? or 
+			// only lower it when there is a ball, but what if we run into another robot, maybe take a button, so like if button B&&ballSense then go to position 2?
+			
+			while(zoidbergEncoder>=0){
+				zoidberg.SetSpeed(-speed);
+			}
+		}
+		if(position ==1){
+			if(zoidbergEncoder<45){
+				while(zoidbergEncoder<=45){
+					zoidberg.SetSpeed(speed);
+				}
+			}
+			else if(zoidbergEncoder>=45){
+				while(zoidbergEncoder>=45)
+				zoidberb.SetSpeed(speed);
+			}
+			
+		}
+		if(position ==2){
+			while(zoidbergEncoder<=90){
+			zoidberg.SetSpeed(speed);
+		}
+			
+		}
+	}
 
 	void ShiftHigh(void) 
 	{
-		// shiftRight->Get() return value: false is low gear, true is high gear
-		if(!(shiftRight->Get())) 
+		// shifter->Get() return value: false is low gear, true is high gear
+		if(!(shifter->Get())) 
 		{
-			shiftRight->Set(true);
-			shiftLeft->Set(true);
+			shifter->Set(true);
+			
 		}
 	}
 
 	void ShiftLow(void) 
 	{
-		// shiftRight->Get() return value: false is low gear, true is high gear
-		if(shiftRight->Get()) {
-			shiftRight->Set(false);
-			shiftLeft->Set(false);
+		// shifter->Get() return value: false is low gear, true is high gear
+		if(shifter->Get()) {
+			shifter->Set(false);
 		}
 	}
 
@@ -193,10 +222,12 @@ public:
 				ShiftLow();
 			}
 		}
-		else if(buttonA && flag)
+		else if(buttonA && flag && limitSwitchShooter)
 		{
 			flag = false;
-			passingPiston->Set(!(passingPiston->Get()));	// flag reset to false while button a is not held to avoid continuous switching while a button is held
+			///TODO:
+			//shooting code
+			
 		}
 		else if(!buttonA)
 		{
@@ -275,8 +306,6 @@ public:
 			delete scores;
 			delete reports;
 		}
-	}
-	
 	
 		double computeDistance (BinaryImage *image, ParticleAnalysisReport *report, bool outer) {
 			double rectShort, height;
