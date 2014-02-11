@@ -360,7 +360,6 @@ public:
         double d = (R+L)/2;
         m_x += d * sin(angle);
         m_y += d * cos(angle);
-
     }
 	
     double getAngleFromTurn(double R, double L, double r)
