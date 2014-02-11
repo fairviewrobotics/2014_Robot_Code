@@ -1,33 +1,45 @@
 #include "WPILib.h"
 #include <math.h>
 #include "Vision/HSLImage.h"
+#define X_IMAGE_RES 320		//X Image resolution in pixels, should be 160, 320 or 640
+#define VIEW_ANGLE 48		//Axis 206 camera
+//#define VIEW_ANGLE 43.5  //Axis M1011 camera
+#define PI 3.141592653
+
+//Score limits used for target identification
+#define RECTANGULARITY_LIMIT 60
+#define ASPECT_RATIO_LIMIT 75
+#define X_EDGE_LIMIT 40
+#define Y_EDGE_LIMIT 60
+
+//Minimum area of particles to be considered
+#define AREA_MINIMUM 500
+
+//Edge profile constants used for hollowness score calculation
+#define XMAXSIZE 24
+#define XMINSIZE 24
+#define YMAXSIZE 24
+#define YMINSIZE 48
+const double xMax[XMAXSIZE] = {1, 1, 1, 1, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, 1, 1, 1, 1};
+const double xMin[XMINSIZE] = {.4, .6, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, .1, 0.6, 0};
+const double yMax[YMAXSIZE] = {1, 1, 1, 1, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, .5, 1, 1, 1, 1};
+const double yMin[YMINSIZE] = {.4, .6, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05,
+								.05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05,
+								.05, .05, .6, 0};
+const double RectHotGoalRatio = 0.95;
 
 class BuiltinDefaultCode : public IterativeRobot {
-	// Declare variable for the robot drive system
-	RobotDrive *m_robotDrive; // Robot will use PWM 1-4 for drive motors
-	
-	// Declare a variable to use to access the driver station object
-	DriverStation *m_ds; // Driver station object
-	UINT32 m_priorPacketNumber; // Keep track of the most recent packet number from the DS
-	UINT8 m_dsPacketsReceivedInCurrentSecond; // Keep track of the DS packets received in the current second
-	
-	// Declare variables for the two joysticks being used
-	Joystick *gamePad; // Joystick 1 (arcade stick or right tank stick)
 
-	// Local variables to count the number of periodic loops performed
-	UINT32 m_autoPeriodicLoops;
-	UINT32 m_disabledPeriodicLoops;
-	UINT32 m_telePeriodicLoops;
 
 	// Motor controllers
-	Victor *left_1;
-	Victor *left_2;
-	Victor *right_1;
-	Victor *right_2;
+	Talon *left_1;
+	Talon *left_2;
+	Talon *right_1;
+	Talon *right_2;
+	Victor *zoidberg;
 		
 	// Solenoids
-	Solenoid *shiftRight;
-	Solenoid *shiftLeft;
+	Solenoid *shifter;
 	Solenoid *passingPiston;
 	
 	// Gyro
@@ -36,36 +48,43 @@ class BuiltinDefaultCode : public IterativeRobot {
 	// Encoders
 	Encoder *leftEncoder;
 	Encoder *rightEncoder;
-	Encoder *shooterEncoder; // Not sure if this is actually needed
 	
 	// Axis Camera
 	AxisCamera *camera;
 	
+<<<<<<< HEAD
 	
+=======
+	// Limit switches
+	DigitalInput *limitSwitchShooter;
+	
+	// Distance sensor
+	Ultrasonic *distanceSensor;
+>>>>>>> a495e5c71a4c9c1174d1dcf1c07e07ef6102c280
 
 public:
-	/**
-	 * Constructor for this "BuiltinDefaultCode" Class.
-	 * 
-	 * The constructor creates all of the objects used for the different inputs and outputs of
-	 * the robot.  Essentially, the constructor defines the input/output mapping for the robot,
-	 * providing named objects for each of the robot interfaces. 
-	 */
 	BuiltinDefaultCode(void) {
 		printf("BuiltinDefaultCode Constructor Started\n");
-		left_1  = new Victor(1);
-		left_2  = new Victor(2);
-		right_1 = new Victor(3);
-		right_2 = new Victor(4);
-		shiftRight = new Solenoid(1);
-		shiftLeft  = new Solenoid(2);
+		
+		left_1  = new Talon(1);
+		left_2  = new Talon(2);
+		right_1 = new Talon(3);
+		right_2 = new Talon(4);
+		zoidberg = new Victor(5);
+		
+		shifter = new Solenoid(1, 2);
+		
 		mainGyro = new Gyro(5);
+		
 		leftEncoder    = new Encoder(6, 8); // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
 		rightEncoder   = new Encoder(7, 9); // Same here
-		shooterEncoder = new Encoder(10, 11); // Also same here
-		// Create a robot using standard right/left robot drive on PWMS 1, 2, 3, and #4
-		m_robotDrive = new RobotDrive(1, 2, 3, 4);
+		zoidbergEncoder = new Encoder(10, 11); //  potentiometer?
+		
 		gamePad = new Joystick(1);
+		
+		limitSwitchShooter = new DigitalInput(1); // 1 is a placeholder for the Digital Input location limit Switch placed on shooter mechanism
+		
+		distanceSensor = new Ultrasonic(9); //9 placeholder.
 
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
@@ -152,23 +171,50 @@ public:
 		right_1->SetSpeed(speed);
 		right_2->SetSpeed(speed);
 	}
+	void moveGobbler(int position){  // 0: 0 degrees 1: 45 degrees 2: 90 degrees?  |_ arm like this, -> is ball 90 degrees, vertical is 0 + is down - is up
+		float speed = 0.25;
+		if(position==0){ //might also be smart to call position as a function of the distance sensor, but only one case, like hey if you sense a ball lower it? or 
+			// only lower it when there is a ball, but what if we run into another robot, maybe take a button, so like if button B&&ballSense then go to position 2?
+			
+			while(zoidbergEncoder>=0){
+				zoidberg.SetSpeed(-speed);
+			}
+		}
+		if(position ==1){
+			if(zoidbergEncoder<45){
+				while(zoidbergEncoder<=45){
+					zoidberg.SetSpeed(speed);
+				}
+			}
+			else if(zoidbergEncoder>=45){
+				while(zoidbergEncoder>=45)
+				zoidberb.SetSpeed(speed);
+			}
+			
+		}
+		if(position ==2){
+			while(zoidbergEncoder<=90){
+			zoidberg.SetSpeed(speed);
+		}
+			
+		}
+	}
 
 	void ShiftHigh(void) 
 	{
-		// shiftRight->Get() return value: false is low gear, true is high gear
-		if(!(shiftRight->Get())) 
+		// shifter->Get() return value: false is low gear, true is high gear
+		if(!(shifter->Get())) 
 		{
-			shiftRight->Set(true);
-			shiftLeft->Set(true);
+			shifter->Set(true);
+			
 		}
 	}
 
 	void ShiftLow(void) 
 	{
-		// shiftRight->Get() return value: false is low gear, true is high gear
-		if(shiftRight->Get()) {
-			shiftRight->Set(false);
-			shiftLeft->Set(false);
+		// shifter->Get() return value: false is low gear, true is high gear
+		if(shifter->Get()) {
+			shifter->Set(false);
 		}
 	}
 
@@ -178,15 +224,13 @@ public:
 
 		float leftStick  = gamePad->GetRawAxis(4);
 		float rightStick = gamePad->GetRawAxis(2);
+		
 		bool rightBumper = gamePad->GetRawButton(6);
 		bool leftBumper  = gamePad->GetRawButton(5);
+		
 		bool buttonA     = gamePad->GetRawButton(2);
-
-		if(fabs(leftStick) >= 0.05 || fabs(rightStick >= 0.05)) 
-		{
-			m_robotDrive->TankDrive(leftStick, rightStick);
-		}
-		else if(rightBumper || leftBumper) 
+		
+		if(rightBumper || leftBumper) 
 		{
 			if(rightBumper && !leftBumper) 
 			{
@@ -197,47 +241,126 @@ public:
 				ShiftLow();
 			}
 		}
-		else if(buttonA && flag)
+		else if(buttonA && flag && limitSwitchShooter)
 		{
 			flag = false;
-			passingPiston->Set(true);
+			///TODO:
+			//shooting code
+			
 		}
-		else
+		else if(!buttonA)
 		{
-			if(!buttonA)
-			{
-				flag = false;
-				motorControlLeft(0.0);
-				motorControlRight(0.0);
+				flag = true;
+				motorControlLeft(leftStick);
+				motorControlRight(rightStick);
+		
 			}
-			else
-			{
-				motorControlLeft(0.0);
-				motorControlRight(0.0);
-			}
-		}
+			
+			motorControlLeft(leftStick);
+			motorControlRight(rightStick); // motor speed declarations done at the end to ensure watchdog is continually updated.
 	} 
 
 
 	/********************************** Continuous Routines *************************************/
+<<<<<<< HEAD
     
 	
+=======
+>>>>>>> a495e5c71a4c9c1174d1dcf1c07e07ef6102c280
 	
 	int identifyBall(void)
 	{
-<<<<<<< HEAD
-		//Get axis camera image apply circular identification algorithm
-		HSLImage image = new HSLImage(); //should we use HSLImage or RGBImage?
-		image = camera -> GetImage(); //gets a new image. check my syntax on this...
-=======
-		// Get axis camera image apply circular identification algorithm.
-		Image* cameraImage = new RGBImage(); // should we use HSLImage or RGBImage?
-		image = camera -> GetImage(); // gets a new image. check my syntax on this.
->>>>>>> e3c71ab4c9c558b3566e4ecd215470ff331b4464
 		
-		return 0; //temp						
-	}
+		Threshold threshold(60, 100, 90, 255, 20, 255);	//HSV threshold criteria, ranges are in that order ie. Hue is 60-100
+		ParticleFilterCriteria2 criteria[] = {
+				{IMAQ_MT_AREA, AREA_MINIMUM, 65535, false, false}
+		};												//Particle filter criteria, used to filter out small particles
+		// AxisCamera &camera = AxisCamera::GetInstance();	//To use the Axis camera uncomment this line
+            /**
+             * Do the image capture with the camera and apply the algorithm described above. This
+             * sample will either get images from the camera or from an image file stored in the top
+             * level directory in the flash memory on the cRIO. The file name in this case is "testImage.jpg"
+             */
+			ColorImage *image;
+			//image = new RGBImage("/testImage.jpg");		// get the sample image from the cRIO flash
 
+			camera.GetImage(image);				//To get the images from the camera comment the line above and uncomment this one
+			BinaryImage *thresholdImage = image->ThresholdHSV(threshold);	// get just the green target pixels
+			//thresholdImage->Write("/threshold.bmp");
+			BinaryImage *convexHullImage = thresholdImage->ConvexHull(false);  // fill in partial and full rectangles
+			//convexHullImage->Write("/ConvexHull.bmp");
+			BinaryImage *filteredImage = convexHullImage->ParticleFilter(criteria, 1);	//Remove small particles
+			//filteredImage->Write("Filtered.bmp");
+
+			vector<ParticleAnalysisReport> *reports = filteredImage->GetOrderedParticleAnalysisReports();  //get a particle analysis report for each particle
+			scores = new Scores[reports->size()];
+			
+			//Iterate through each particle, scoring it and determining whether it is a target or not
+			for (unsigned i = 0; i < reports->size(); i++) {
+				ParticleAnalysisReport *report = &(reports->at(i));
+				
+				scores[i].rectangularity = scoreRectangularity(report);
+				scores[i].aspectRatioOuter = scoreAspectRatio(filteredImage, report, true);
+				scores[i].aspectRatioInner = scoreAspectRatio(filteredImage, report, false);			
+				scores[i].xEdge = scoreXEdge(thresholdImage, report);
+				scores[i].yEdge = scoreYEdge(thresholdImage, report);
+				
+				if(scoreCompare(scores[i], false))
+				{
+					printf("particle: %d  is a High Goal  centerX: %f  centerY: %f \n", i, report->center_mass_x_normalized, report->center_mass_y_normalized);
+					printf("Distance: %f \n", computeDistance(thresholdImage, report, false));
+				} else if (scoreCompare(scores[i], true)) {
+					printf("particle: %d  is a Middle Goal  centerX: %f  centerY: %f \n", i, report->center_mass_x_normalized, report->center_mass_y_normalized);
+					printf("Distance: %f \n", computeDistance(thresholdImage, report, true));
+				} else {
+					printf("particle: %d  is not a goal  centerX: %f  centerY: %f \n", i, report->center_mass_x_normalized, report->center_mass_y_normalized);
+				}
+				printf("rect: %f  ARinner: %f \n", scores[i].rectangularity, scores[i].aspectRatioInner);
+				printf("ARouter: %f  xEdge: %f  yEdge: %f  \n", scores[i].aspectRatioOuter, scores[i].xEdge, scores[i].yEdge);	
+			}
+			printf("\n");
+			
+			// be sure to delete images after using them
+			delete filteredImage;
+			delete convexHullImage;
+			delete thresholdImage;
+			delete image;
+			
+			//delete allocated reports and Scores objects also
+			delete scores;
+			delete reports;
+		}
+	
+		double computeDistance (BinaryImage *image, ParticleAnalysisReport *report, bool outer) {
+			double rectShort, height;
+			int targetHeight;
+		
+			imaqMeasureParticle(image->GetImaqImage(), report->particleIndex, 0, IMAQ_MT_EQUIVALENT_RECT_SHORT_SIDE, &rectShort);
+			//using the smaller of the estimated rectangle short side and the bounding rectangle height results in better performance
+			//on skewed rectangles
+			height = min(report->boundingRect.height, rectShort);
+			targetHeight = outer ? 29 : 21;
+		
+			return X_IMAGE_RES * targetHeight / (height * 12 * 2 * tan(VIEW_ANGLE*PI/(180*2)));
+		}
+		double scoreAspectRatio(BinaryImage *image, ParticleAnalysisReport *report, bool outer){
+			double rectLong, rectShort, idealAspectRatio, aspectRatio;
+			idealAspectRatio = outer ? (62/29) : (62/20);	//Dimensions of goal opening + 4 inches on all 4 sides for reflective tape
+		
+			imaqMeasureParticle(image->GetImaqImage(), report->particleIndex, 0, IMAQ_MT_EQUIVALENT_RECT_LONG_SIDE, &rectLong);
+			imaqMeasureParticle(image->GetImaqImage(), report->particleIndex, 0, IMAQ_MT_EQUIVALENT_RECT_SHORT_SIDE, &rectShort);
+		
+			//Divide width by height to measure aspect ratio
+			if(report->boundingRect.width > report->boundingRect.height){
+				//particle is wider than it is tall, divide long by short
+				aspectRatio = 100*(1-fabs((1-((rectLong/rectShort)/idealAspectRatio))));
+			} else {
+				//particle is taller than it is wide, divide short by long
+				aspectRatio = 100*(1-fabs((1-((rectShort/rectLong)/idealAspectRatio))));
+			}
+			return (max(0, min(aspectRatio, 100)));		//force to be in range 0-100
+		}
+		
 	void initialShot(int x)
 	{
 		while(shooterEncoder->Get() < x)
@@ -248,25 +371,28 @@ public:
 		shoot();
 	}
 
-	void centerRobot(void) // 1
+	bool centerRobot(void) // 1
 	{
 		while(!identifyBall()) // Assumes identifyBall returns true if ball is centered
 		{
-			motorControlLeft(-0.5); //// this method needs to take an int 0,1,2,3 from the identifyBall method based off the location of the ball
-									// where 0 means the ball is too the left, 1 the ball is centered, and 2 the ball is to the right, 3, the ball is not onscreen
+			motorControlLeft(-0.5); // This method needs to take an int 0,1,2,3 from the identifyBall method based off the location of the ball
+									// Where 0 means the ball is too the left, 1 the ball is centered, and 2 the ball is to the right, 3, the ball is not onscreen
 			motorControlRight(0.5);
 		}
+		return true; // Temporary value
 	}
 
 	void seekAndDestroy(void) // 2
 	{
-		float x = 1.0; // temporary value
-		while(!limiterSwitch)    /// There will be a limiter switch in the catapault mechanism the robot should ceck to see if it captured the ball with this.
+		float x = 1.0; // Temporary value
+		while(!limitSwitch->Get())    // There will be a limiter switch in the catapault mechanism the robot should check to see if it captured the ball with this.
 		{
-			if(centerRobot==1)
-			motorControlLeft(x); // x is the max value for the motors.
-			motorControlRight(x); // this method should call the turn method based off of input from the find ball method, adjusting the angle first
-									// centering the robot on the ball then driving to the ball 
+			if(centerRobot())
+			{
+				motorControlLeft(x);  // x is the max value for the motors.
+				motorControlRight(x); // This method should call the turn method based off of input from the find ball method, adjusting the angle first
+									  // Centering the robot on the ball then driving to the ball 
+			}
 		}
 	}
 
