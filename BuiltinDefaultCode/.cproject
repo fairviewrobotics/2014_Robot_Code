@@ -3,18 +3,16 @@
 
 <cproject storage_type_id="org.eclipse.cdt.core.XmlProjectDescriptionStorage2">
 	<storageModule moduleId="org.eclipse.cdt.core.settings">
-		<cconfiguration id="0.2045236017">
-			<storageModule externalCElementFile="0.2045236017_org.eclipse.cdt.core.settings" id="0.2045236017" name="Default"/>
-			<storageModule externalCElementFile="0.2045236017_org.eclipse.cdt.core.pathentry"/>
-			<storageModule externalCElementFile="0.2045236017_userdefinedContainer"/>
-			<storageModule externalCElementFile="0.2045236017_cdtBuildSystem" version="4.0.0"/>
-			<storageModule externalCElementFile="0.2045236017_scannerConfiguration"/>
-			<storageModule externalCElementFile="0.2045236017_org.eclipse.cdt.core.externalSettings"/>
-			<storageModule externalCElementFile="0.2045236017_org.eclipse.cdt.core.language.mapping"/>
-			<storageModule externalCElementFile="0.2045236017_org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
+		<cconfiguration id="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992">
+			<storageModule externalCElementFile="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992_org.eclipse.cdt.core.settings" id="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992" name="Default"/>
+			<storageModule externalCElementFile="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992_cdtBuildSystem" version="4.0.0"/>
+			<storageModule externalCElementFile="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992_org.eclipse.cdt.core.externalSettings"/>
+			<storageModule externalCElementFile="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992_scannerConfiguration"/>
+			<storageModule externalCElementFile="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992_org.eclipse.cdt.core.language.mapping"/>
+			<storageModule externalCElementFile="cdt.managedbuild.toolchain.gnu.mingw.base.1320599992_org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="BuiltinDefaultCode.null.439854453" name="BuiltinDefaultCode"/>
+		<project id="BuiltinDefaultCode.null.787581754" name="BuiltinDefaultCode"/>
 	</storageModule>
 </cproject>

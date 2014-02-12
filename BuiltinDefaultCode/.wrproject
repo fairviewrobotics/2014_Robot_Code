@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <wrxml>
     <properties platform="VxWorks" platform_name="vxworks-6.3" root="1" type="DownloadableKernelModuleProject"/>
     <attributes>
@@ -240,12 +240,7 @@
         </mapAttribute>
     </attributes>
     <buildtargets>
-        <buildtarget buildtool="Linker" name="BuiltinDefaultCode" passed="false" targetname="BuiltinDefaultCode">
-            <contents>
-                <buildtargetreference name="/BuiltinDefaultCode/BuiltinDefaultCode_partialImage"/>
-            </contents>
-        </buildtarget>
-        <buildtarget buildtool="Partial Image Linker" name="BuiltinDefaultCode_partialImage" passed="true" targetname="BuiltinDefaultCode_partialImage">
+        <buildtarget buildtool="Linker" name="BuiltinDefaultCodeNew28" passed="false" targetname="BuiltinDefaultCodeNew28">
             <contents>
                 <folder name="/BuiltinDefaultCode" recursive="true"/>
             </contents>
