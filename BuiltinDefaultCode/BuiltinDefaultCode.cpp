@@ -136,10 +136,7 @@ public:
 		m_dsPacketsReceivedInCurrentSecond = 0; // Reset the number of dsPackets in current second
 	}
 	
-	void SetCoordinates(void) {
-		x = 0;//manually input x and y coordinates
-		y = 0;
-	}
+	
 
 	/********************************** Periodic Routines *************************************/
 
@@ -412,6 +409,7 @@ public:
 		rightEncoder->Reset();
         double R = rightEncoder -> GetDistance();
         double L = leftEncoder -> GetDistance();
+		double tempangle = 0;
 		if(x <= 0)
 		{
 			while(tempangle > x) 
@@ -419,9 +417,9 @@ public:
 			{
 				motorControlLeft(-0.5);
 				motorControlRight(0.5);
-                double R = rightEncoder -> GetDistance();
-                double L = leftEncoder -> GetDistance();
-                double tempangle = getAngleFromTurn(R,L,r); //r is the distance from the center of the robot to the wheels.
+                R = rightEncoder -> GetDistance();
+                L = leftEncoder -> GetDistance();
+                tempangle = getAngleFromTurn(R,L,r); //r is the distance from the center of the robot to the wheels.
 			}
 		}
 		else
@@ -430,9 +428,9 @@ public:
 			{
 				motorControlLeft(0.5);
 				motorControlRight(-0.5);
-                double R = rightEncoder -> getDistance();
-                double L = leftEncoder -> getDistance();
-                double tempangle = getAngleFromTurn(R,L,r); 
+                R = rightEncoder -> GetDistance();
+                L = leftEncoder -> GetDistance();
+                tempangle = getAngleFromTurn(R,L,r); 
 			}
 		}
 
