@@ -113,8 +113,8 @@ public:
 		m_x = 0;
 		m_y = 0;
 
-        // Set radians per pulse for encoder.
-        leftEncoder->SetDistancePerPulse(.00460243323);
+        // Set feet per pulse for encoder.
+        leftEncoder->SetDistancePerPulse(.00460243323); //Not the actual value. Find the gear ratio.
         rightEncoder->SetDistancePerPulse(.00460243323);
 
 		printf("BuiltinDefaultCode Constructor Completed\n");
@@ -141,6 +141,7 @@ public:
 	}
 
 	void TeleopInit(void) {
+
 		// int m_telePeriodicLoops = 0; // Reset the loop counter for teleop mode
 		// int m_dsPacketsReceivedInCurrentSecond = 0; // Reset the number of dsPackets in current second
 		m_compressor->Start();
@@ -469,9 +470,10 @@ public:
 	{
 		leftEncoder->Reset();
 		rightEncoder->Reset();
-        double R = rightEncoder->GetDistance();
-        double L = leftEncoder->GetDistance();
-        double tempangle = 0;
+        double R = rightEncoder -> GetDistance(); // This won't work, need the gear ratio.
+        double L = leftEncoder -> GetDistance();
+		double tempangle = 0;
+
 		if(x <= 0)
 		{
 			while(tempangle > x) 
@@ -479,7 +481,7 @@ public:
 			{
 				motorControlLeft(-0.5);
 				motorControlRight(0.5);
-                R = rightEncoder -> GetDistance();
+                R = rightEncoder -> GetDistance(); 
                 L = leftEncoder -> GetDistance();
                 tempangle = getAngleFromTurn(R, L, 0.3); // TEMP 0.3 is the distance from the center of the robot to the wheels.
 			}
@@ -490,8 +492,8 @@ public:
 			{
 				motorControlLeft(0.5);
 				motorControlRight(-0.5);
-                R = rightEncoder->GetDistance();
-                L = leftEncoder->GetDistance();
+                R = rightEncoder -> GetDistance();
+                L = leftEncoder -> GetDistance();
                 tempangle = getAngleFromTurn(R, L, 0.3);
 			}
 		}
