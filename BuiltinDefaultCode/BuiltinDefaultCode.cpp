@@ -81,24 +81,24 @@ public:
 		left_2  = new Talon(2);
 		right_1 = new Talon(3);
 		right_2 = new Talon(4);
-		zoidberg_roller = new Victor(5);
-		zoidberg_position = new Victor(6);
+		zoidberg_roller = new Victor(8);
+		zoidberg_position = new Victor(5);
 		shooter = new Victor(7);
 		
 		// Compressor
-		m_compressor = new Compressor(1,1);
+		m_compressor = new Compressor(3,1);
 		
 		// End Compressor
 		shifter = new Solenoid(1, 2);
 				
-		leftEncoder    = new Encoder(1, 2);    // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
-		rightEncoder   = new Encoder(3, 4);    // Same here
+		leftEncoder    = new Encoder(4, 5);    // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
+		rightEncoder   = new Encoder(1, 2);    // Same here
 		zoidbergAnalog = new AnalogChannel(2); // potentiometer?
-		distanceSensor = new AnalogChannel(3);
+		distanceSensor = new AnalogChannel(1);
 
 		gamePad = new Joystick(1);
 		
-		limitSwitchShooter = new DigitalInput(1); // 1 is a placeholder for the Digital Input location limit Switch placed on shooter mechanism
+		limitSwitchShooter = new DigitalInput(6); // 1 is a placeholder for the Digital Input location limit Switch placed on shooter mechanism
 
 		// Acquire the Driver Station object
 		m_ds = DriverStation::GetInstance();
@@ -283,10 +283,11 @@ public:
 		motorControlLeft(-1*leftStick);
 		motorControlRight(rightStick); // motor speed declarations done at the end to ensure watchdog is continually updated.
 		shooter->SetSpeed(0.0);
-		zoidberg_roller -> Set(pass(buttonB));
+		zoidberg_roller->SetSpeed(1.0);
+		//zoidberg_roller -> Set(pass(buttonB));
 	} 
 
-
+	/*
 	/********************************** Continuous Routines *************************************/
 	
 	int identifyBall(void)
@@ -424,7 +425,7 @@ public:
 
 	void reposition(void) // 3
 	{
-		turn(0); // Faces the robot in the initial orientation
+		//turn(0); // Faces the robot in the initial orientation
 	}
 
 	void shoot(void) // 4
@@ -452,7 +453,7 @@ public:
 		shooter->Set(0);
 		moveGobbler(2);
 	}
-	
+	/*
 	float pass(bool buttonB) {
 		float speed = 0.25;
 		moveGobbler(2); //Someone write this method!
@@ -572,8 +573,9 @@ public:
 
 	void TeleopContinuous(void)
 	{
-			
+	
 	}
+	*/
 };
 
 START_ROBOT_CLASS(BuiltinDefaultCode);
