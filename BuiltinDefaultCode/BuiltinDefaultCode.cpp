@@ -6,16 +6,16 @@
 //#define VIEW_ANGLE 43.5  // Axis M1011 camera
 #define PI 3.141592653
 
-//Score limits used for target identification
+// Score limits used for target identification
 #define RECTANGULARITY_LIMIT 60
 #define ASPECT_RATIO_LIMIT 75
 #define X_EDGE_LIMIT 40
 #define Y_EDGE_LIMIT 60
 
-//Minimum area of particles to be considered
+// Minimum area of particles to be considered
 #define AREA_MINIMUM 500
 
-//Edge profile constants used for hollowness score calculation
+// Edge profile constants used for hollowness score calculation
 #define XMAXSIZE 24
 #define XMINSIZE 24
 #define YMAXSIZE 24
@@ -40,7 +40,7 @@ class BuiltinDefaultCode : public IterativeRobot {
 	Victor *zoidberg_position;
 	Victor *shooter;
 	
-	//Compressor
+	// Compressor
 	Compressor *m_compressor;	
 	
 	// Solenoids
@@ -86,7 +86,7 @@ public:
 		shooter = new Victor(7);
 		
 		// Compressor
-		m_compressor = new Compressor(3,1);
+		m_compressor = new Compressor(3,2);
 		
 		// End Compressor
 		shifter = new Solenoid(1, 2);
@@ -178,11 +178,11 @@ public:
 		right_2->SetSpeed(speed);
 	}
 
-	void moveGobbler(int position){  // 0: 0 degrees 1: 45 degrees 2: 90 degrees?  |_ arm like this, -> is ball 90 degrees, vertical is 0 + is down - is up
+	void moveGobbler(int position) { // 0: 0 degrees 1: 45 degrees 2: 90 degrees?  |_ arm like this, -> is ball 90 degrees, vertical is 0 + is down - is up
 		float speed = 0.25;
-		if(position == 0){ // might also be smart to call position as a function of the distance sensor, but only one case, like hey if you sense a ball lower it? or 
+		if(position == 0) { // might also be smart to call position as a function of the distance sensor, but only one case, like hey if you sense a ball lower it? or 
 			// only lower it when there is a ball, but what if we run into another robot, maybe take a button, so like if button B&&ballSense then go to position 2?
-			while(zoidbergAnalog->GetValue() >= 0){
+			while(zoidbergAnalog->GetValue() >= 0) {
 				zoidberg_position->SetSpeed(-speed);
 				shooter->Set(0.3);
 				left_1 -> Set(0.0);
@@ -192,9 +192,19 @@ public:
 				zoidberg_roller -> Set(0.0);
 			}
 		}
-		if(position == 1){
-			if(zoidbergAnalog->GetValue() < 45){
-				while(zoidbergAnalog->GetValue() <= 45){
+		if(position == 1) {
+			if(zoidbergAnalog->GetValue() < 45) {
+				while(zoidbergAnalog->GetValue() <= 45) {
+					zoidberg_position->SetSpeed(speed);
+					shooter->Set(0.3);
+					left_1 -> Set(0.0);
+					left_2 -> Set(0.0);
+					right_1 -> Set(0.0);
+					right_2 -> Set(0.0);
+					zoidberg_roller -> Set(0.0);
+				}
+			} else if(zoidbergAnalog->GetValue() >= 45) {
+				while(zoidbergAnalog->GetValue() >= 45) {
 					zoidberg_position->SetSpeed(speed);
 					shooter->Set(0.3);
 					left_1 -> Set(0.0);
@@ -204,8 +214,8 @@ public:
 					zoidberg_roller -> Set(0.0);
 				}
 			}
-			else if(zoidbergAnalog->GetValue() >= 45){
-				while(zoidbergAnalog->GetValue() >= 45)
+		} else if(position == 2){
+			while(zoidbergAnalog->GetValue() <= 90){
 				zoidberg_position->SetSpeed(speed);
 				shooter->Set(0.3);
 				left_1 -> Set(0.0);
@@ -214,39 +224,26 @@ public:
 				right_2 -> Set(0.0);
 				zoidberg_roller -> Set(0.0);
 			}
-		} else if(position == 2){
-			while(zoidbergAnalog->GetValue() <= 90){
-			zoidberg_position->SetSpeed(speed);
-			shooter->Set(0.3);
-			left_1 -> Set(0.0);
-			left_2 -> Set(0.0);
-			right_1 -> Set(0.0);
-			right_2 -> Set(0.0);
-			zoidberg_roller -> Set(0.0);
-		}
 		}
 	}
 
-	void ShiftHigh(void) 
-	{
+	void ShiftHigh(void) {
 		// shifter->Get() return value: false is low gear, true is high gear
-		if(!(shifter->Get())) 
-		{
+		if(!(shifter->Get())) {
 			shifter->Set(true);
 			
 		}
 	}
 
-	void ShiftLow(void) 
-	{
+	void ShiftLow(void) {
 		// shifter->Get() return value: false is low gear, true is high gear
 		if(shifter->Get()) {
 			shifter->Set(false);
 		}
 	}
 
-	void TeleopPeriodic(void)
-	{
+	void TeleopPeriodic(void) {
+		m_compressor->Start();
 		bool flag = true; // Flag object initial declaration to ensure passing piston toggle works properly
 
 		float leftStick  = gamePad->GetRawAxis(2);
@@ -256,43 +253,50 @@ public:
 		bool leftBumper  = gamePad->GetRawButton(5);
 		
 		bool buttonA     = gamePad->GetRawButton(2);
-		bool buttonB     = gamePad->GetRawButton(3);
+		// bool buttonB     = gamePad->GetRawButton(3);
 		
-		if(rightBumper || leftBumper) 
-		{
-			if(rightBumper && !leftBumper) 
-			{
+		if(rightBumper || leftBumper) {
+			if(rightBumper && !leftBumper) {
 				ShiftHigh();
-			}
-			else if(leftBumper && !rightBumper) 
-			{
+			} else if(leftBumper && !rightBumper) {
 				ShiftLow();
 			}
-		}
-		else if(buttonA)
-		{
+		} else if(buttonA) {
 			shoot();
 			flag = false;
-		}
-		else if(!buttonA)
-		{
+		} else if(!buttonA) {
 			flag = true;
-			motorControlLeft(-1*leftStick);
+			motorControlLeft(-1 * leftStick);
 			motorControlRight(rightStick);
 		}
-		motorControlLeft(-1*leftStick);
+		
+		// Pickup sequence:
+		// 
+		// User presses a button
+		// Zoidberg roller spins up, lowered into a position defined by potentiometer
+		// Once reached, it stops lowered
+		// If grabber down and button pressed or distance sensor exceeds a certain threshold (moving average) for about 0.5 seconds
+		// (Above configurable at the top of the file)
+		// Moves back up to previous position while still spinning
+		// Once in position, roller stops.
+		
+		// Third position for gobbler between 0 degrees and pickup position when firing
+		
+		// 
+
+		motorControlLeft(-1 * leftStick);
 		motorControlRight(rightStick); // motor speed declarations done at the end to ensure watchdog is continually updated.
+
 		shooter->SetSpeed(0.0);
-		zoidberg_roller->SetSpeed(1.0);
-		//zoidberg_roller -> Set(pass(buttonB));
+
+		// zoidberg_roller->SetSpeed(1.0);
+		// zoidberg_roller -> Set(pass(buttonB));
 	} 
 
-	/*
 	/********************************** Continuous Routines *************************************/
-	
-	int identifyBall(void)
-	{
-		
+
+	int identifyBall(void) {
+
 //		Threshold threshold(60, 100, 90, 255, 20, 255);	//HSV threshold criteria, ranges are in that order ie. Hue is 60-100
 //		ParticleFilterCriteria2 criteria[] = {
 //				{IMAQ_MT_AREA, AREA_MINIMUM, 65535, false, false}
@@ -388,8 +392,7 @@ public:
 	}
 	*/
 
-	void initialShot(int x)
-	{
+	void initialShot(int x) {
 //		while(shooterEncoder->Get() < x)
 //		{
 //			motorControlLeft(1.0); // Move forward for set length determined by encoders position
@@ -398,8 +401,7 @@ public:
 //		shoot();
 	}
 
-	bool centerRobot(void) // 1
-	{
+	bool centerRobot(void) {
 		while(!identifyBall()) // Assumes identifyBall returns true if ball is centered
 		{
 			motorControlLeft(-0.5); // This method needs to take an int 0,1,2,3 from the identifyBall method based off the location of the ball
@@ -409,13 +411,10 @@ public:
 		return true; // Temporary value
 	}
 
-	void seekAndDestroy(void) // 2
-	{
+	void seekAndDestroy(void) {
 		float x = 1.0; // Temporary value
-		while(!limitSwitchShooter->Get())    // There will be a limit switch in the catapault mechanism the robot should check to see if it captured the ball with this.
-		{
-			if(centerRobot())
-			{
+		while(!limitSwitchShooter->Get()) { // There will be a limit switch in the catapault mechanism the robot should check to see if it captured the ball with this.
+			if(centerRobot()) {
 				motorControlLeft(x);  // x is the max value for the motors.
 				motorControlRight(x); // This method should call the turn method based off of input from the find ball method, adjusting the angle first
 									  // Centering the robot on the ball then driving to the ball 
@@ -423,13 +422,11 @@ public:
 		}
 	}
 
-	void reposition(void) // 3
-	{
+	void reposition(void) {
 		//turn(0); // Faces the robot in the initial orientation
 	}
 
-	void shoot(void) // 4
-	{
+	void shoot(void) {
 		moveGobbler(0);
 		// Not sure about the below values
 		while(!limitSwitchShooter->Get()) { // Limit switch: false = pressed, true = not pressed
@@ -441,6 +438,7 @@ public:
 			zoidberg_roller -> Set(0.0);
 			zoidberg_position -> Set(0.0);
 		}
+
 		while(limitSwitchShooter->Get()) {
 			shooter->Set(0.5);
 			left_1 -> Set(0.0);
@@ -450,10 +448,11 @@ public:
 			zoidberg_roller -> Set(0.0);
 			zoidberg_position -> Set(0.0);
 		}
+
 		shooter->Set(0);
 		moveGobbler(2);
 	}
-	/*
+
 	float pass(bool buttonB) {
 		float speed = 0.25;
 		moveGobbler(2); //Someone write this method!
@@ -467,30 +466,24 @@ public:
 		}
 	}
 
-	void turn(int x) // x is an angle in radians. Left turn is positive. Right turn is negative. 
-	{
+	void turn(int x) { // x is an angle in radians. Left turn is positive. Right turn is negative. 
 		leftEncoder->Reset();
 		rightEncoder->Reset();
         double R = rightEncoder -> GetDistance(); // This won't work, need the gear ratio.
         double L = leftEncoder -> GetDistance();
 		double tempangle = 0;
 
-		if(x <= 0)
-		{
-			while(tempangle > x) 
-								// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
-			{
+		if(x <= 0) {
+			while(tempangle > x) {
+			// Gyro needs to have an accepted angle value. +- 5 degrees? or so most likely less, the accepted angle must be based off the distance to the ball we can discuss this today.
 				motorControlLeft(-0.5);
 				motorControlRight(0.5);
                 R = rightEncoder -> GetDistance(); 
                 L = leftEncoder -> GetDistance();
                 tempangle = getAngleFromTurn(R, L, 0.3); // TEMP 0.3 is the distance from the center of the robot to the wheels.
 			}
-		}
-		else
-		{
-			while( tempangle < x) // Encoder -> turn radius shit here check with gyro
-			{
+		} else {
+			while( tempangle < x) { // Encoder -> turn radius shit here check with gyro
 				motorControlLeft(0.5);
 				motorControlRight(-0.5);
                 R = rightEncoder -> GetDistance();
@@ -498,25 +491,18 @@ public:
                 tempangle = getAngleFromTurn(R, L, 0.3);
 			}
 		}
-
 	}
 
-    void straight(double d)
-    {
+    void straight(double d) {
         leftEncoder -> Reset();
         rightEncoder -> Reset();
         double x = 0;
-        if (d == 0)
-        {
+        if (d == 0) {
 
-        }
-
-        else if (d > 0)
-        {
+        } else if (d > 0) {
             double templ;
             double tempr;
-            while (x < d)
-            {
+            while (x < d) {
                motorControlRight(.5);
                motorControlLeft(.5);
                templ = leftEncoder -> GetDistance();
@@ -524,13 +510,10 @@ public:
                x = (tempr + templ)/2;
             }
             updateCoordinates();
-        }
-        else
-        {
+        } else {
             double templ;
             double tempr;
-            while (x > d)
-            {
+            while (x > d) {
                  motorControlRight(-.5);
                  motorControlLeft(-.5);
                  templ = leftEncoder -> GetDistance();
@@ -538,12 +521,10 @@ public:
                  x = (tempr + templ)/2;
             }
             updateCoordinates();
-           
         }
     }
 
-    void updateCoordinates()
-    {
+    void updateCoordinates() {
         double R = rightEncoder -> GetDistance();
         double L = leftEncoder -> GetDistance();
         double d = (R+L)/2;
@@ -551,18 +532,14 @@ public:
         m_y += d * cos(angle);
     }
 	
-    double getAngleFromTurn(double R, double L, double r)
-    {
+    double getAngleFromTurn(double R, double L, double r) {
         double LAngle = -L/r;
         double RAngle = R/r;
         double NAngle = (LAngle + RAngle)/2;
         return NAngle;
     }
 
-
-
-	void DisabledContinuous(void)
-	{
+	void DisabledContinuous(void) {
 
 	}
         
@@ -575,7 +552,6 @@ public:
 	{
 	
 	}
-	*/
 };
 
 START_ROBOT_CLASS(BuiltinDefaultCode);
