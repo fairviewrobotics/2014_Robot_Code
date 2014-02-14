@@ -558,6 +558,15 @@ public:
 			return 0;
 		}	
 	}
+
+	double scoreCircularity(ParticleAnalysisReport *report)
+	{
+		if(report->boundingRect.width*report->boundingRect.height !=0){
+			return 100*report->particleArea/((report->boundingRect.width / 2) * (report->boundingRect.width / 2) * PI);
+		} else {
+			return 0;
+		}
+	}
 	
 	double ratioToScore(double ratio)
 	{
