@@ -1,5 +1,6 @@
 #include "WPILib.h"
 #include <math.h>
+#include <sstream>
 #include "Vision/HSLImage.h"
 #define X_IMAGE_RES 320		// X Image resolution in pixels, should be 160, 320 or 640
 #define VIEW_ANGLE 48		// Axis 206 camera
@@ -15,6 +16,14 @@
 // Minimum area of particles to be considered
 #define AREA_MINIMUM 500
 
+//Maximum number of particles to process
+#define MAX_PARTICLES 8
+
+//Score limits used for hot target determination
+#define TAPE_WIDTH_LIMIT 50
+#define VERTICAL_SCORE_LIMIT 50
+#define LR_SCORE_LIMIT 50
+
 // Edge profile constants used for hollowness score calculation
 #define XMAXSIZE 24
 #define XMINSIZE 24
@@ -27,6 +36,12 @@ const double yMin[YMINSIZE] = {.4, .6, .05, .05, .05, .05, .05, .05, .05, .05, .
 								.05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05, .05,
 								.05, .05, .6, 0};
 const double RectHotGoalRatio = 0.95;
+
+bool compressor_enabled = true;
+bool buttonStartFlag = true;
+
+int potentiometerValue;
+int counter = 0;
 
 class BuiltinDefaultCode : public IterativeRobot {
 
@@ -41,11 +56,10 @@ class BuiltinDefaultCode : public IterativeRobot {
 	Victor *shooter;
 	
 	// Compressor
-	Compressor *m_compressor;	
-
+	Compressor *compressor;	
+	
 	// Solenoids
 	Solenoid *shifter;
-	Solenoid *passingPiston;
 
 	// Gyro
 	Gyro *mainGyro;
@@ -54,7 +68,7 @@ class BuiltinDefaultCode : public IterativeRobot {
 	Encoder *leftEncoder;
 	Encoder *rightEncoder;
 
-	AnalogChannel *zoidbergAnalog;
+	AnalogChannel *potentiometer;
 	AnalogChannel *distanceSensor;
 
 	// Axis Camera
@@ -96,10 +110,6 @@ class BuiltinDefaultCode : public IterativeRobot {
 	int verticalTargets[MAX_PARTICLES];
 	int horizontalTargets[MAX_PARTICLES];
 	int verticalTargetCount, horizontalTargetCount;
-	Threshold threshold(105, 137, 230, 255, 133, 183);	//HSV threshold criteria, ranges are in that order ie. Hue is 60-100
-	ParticleFilterCriteria2 criteria[] = {
-			{IMAQ_MT_AREA, AREA_MINIMUM, 65535, false, false}
-	};												//Particle filter criteria, used to filter out small particles
 	// AxisCamera &camera = AxisCamera::GetInstance();	//To use the Axis camera uncomment this line
 
 public:
@@ -110,23 +120,23 @@ public:
 		left_2  = new Talon(2);
 		right_1 = new Talon(3);
 		right_2 = new Talon(4);
-		zoidberg_roller = new Victor(8);
+		// Dicks
 		zoidberg_position = new Victor(5);
 		shooter = new Victor(7);
+		zoidberg_roller = new Victor(8);
 
 		// Compressor
-		m_compressor = new Compressor(3,2);
-		
-		// End Compressor
+		compressor = new Compressor(3,1);
+
 		shifter = new Solenoid(1, 2);
 				
-		leftEncoder    = new Encoder(4, 5);    // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
-		rightEncoder   = new Encoder(1, 2);    // Same here
-		zoidbergAnalog = new AnalogChannel(2); // potentiometer?
+		leftEncoder    = new Encoder(4, 5); // Second int is a placeholder to fix an error with the code (Encoder takes 2 ints)
+		rightEncoder   = new Encoder(1, 2); // Same here
 		distanceSensor = new AnalogChannel(1);
+		potentiometer = new AnalogChannel(2);
 
 		gamePad = new Joystick(1);
-		
+
 		limitSwitchShooter = new DigitalInput(6);
 
 		// Acquire the Driver Station object
@@ -149,6 +159,7 @@ public:
 		printf("BuiltinDefaultCode Constructor Completed\n");
 	}
 
+	/********************************** Init Routines *************************************/
 
 	/********************************** Init Routines *************************************/
 
@@ -165,14 +176,13 @@ public:
 
 	void AutonomousInit(void) {
 		// int m_autoPeriodicLoops = 0; // Reset the loop counter for autonomous mode
-		m_compressor->Start();
 	}
 
 	void TeleopInit(void) {
-
 		// int m_telePeriodicLoops = 0; // Reset the loop counter for teleop mode
 		// int m_dsPacketsReceivedInCurrentSecond = 0; // Reset the number of dsPackets in current second
-		m_compressor->Start();
+		compressor->Start();
+		compressor_enabled = true;
 	}
 
 	/********************************** Periodic Routines *************************************/
@@ -180,8 +190,7 @@ public:
 	void DisabledPeriodic(void) {
 	}
 
-	void AutonomousPeriodic(void) 
-    {
+	void AutonomousPeriodic(void) {
 		initialShot(1); // 1 is a temporary value.
 		centerRobot();
 		seekAndDestroy();
@@ -210,7 +219,7 @@ public:
 		float speed = 0.25;
 		if(position == 0) { // might also be smart to call position as a function of the distance sensor, but only one case, like hey if you sense a ball lower it? or 
 			// only lower it when there is a ball, but what if we run into another robot, maybe take a button, so like if button B&&ballSense then go to position 2?
-			while(zoidbergAnalog->GetValue() >= 0) {
+			while(potentiometer->GetValue() >= 0) {
 				zoidberg_position->SetSpeed(-speed);
 				shooter->Set(0.3);
 				left_1 -> Set(0.0);
@@ -221,8 +230,8 @@ public:
 			}
 		}
 		if(position == 1) {
-			if(zoidbergAnalog->GetValue() < 45) {
-				while(zoidbergAnalog->GetValue() <= 45) {
+			if(potentiometer->GetValue() < 45) {
+				while(potentiometer->GetValue() <= 45) {
 					zoidberg_position->SetSpeed(speed);
 					shooter->Set(0.3);
 					left_1 -> Set(0.0);
@@ -231,8 +240,8 @@ public:
 					right_2 -> Set(0.0);
 					zoidberg_roller -> Set(0.0);
 				}
-			} else if(zoidbergAnalog->GetValue() >= 45) {
-				while(zoidbergAnalog->GetValue() >= 45) {
+			} else if(potentiometer->GetValue() >= 45) {
+				while(potentiometer->GetValue() >= 45) {
 					zoidberg_position->SetSpeed(speed);
 					shooter->Set(0.3);
 					left_1 -> Set(0.0);
@@ -243,7 +252,7 @@ public:
 				}
 			}
 		} else if(position == 2){
-			while(zoidbergAnalog->GetValue() <= 90){
+			while(potentiometer->GetValue() <= 90){
 				zoidberg_position->SetSpeed(speed);
 				shooter->Set(0.3);
 				left_1 -> Set(0.0);
@@ -271,17 +280,37 @@ public:
 	}
 
 	void TeleopPeriodic(void) {
-		m_compressor->Start();
-		bool flag = true; // Flag object initial declaration to ensure passing piston toggle works properly
+		bool flag = true; // Flag object initial declaration
 
-		float leftStick  = gamePad->GetRawAxis(2);
+		float leftStick  = -1*gamePad->GetRawAxis(2);
 		float rightStick = gamePad->GetRawAxis(4);
 
-		bool rightBumper = gamePad->GetRawButton(6);
-		bool leftBumper  = gamePad->GetRawButton(5);
-
+		// bool buttonX  = gamePad->GetRawButton(1);
 		bool buttonA     = gamePad->GetRawButton(2);
-		// bool buttonB     = gamePad->GetRawButton(3);
+		// bool buttonB  = gamePad->GetRawButton(3);
+		// bool buttonY  = gamePad->GetRawButton(4);
+
+		bool leftBumper  = gamePad->GetRawButton(5);
+		bool rightBumper = gamePad->GetRawButton(6);
+		
+		// bool leftTrigger  = gamePad->GetRawButton(7);
+		// bool rightTrigger = gamePad->GetRawButton(8);
+
+		// bool buttonBack = gamePad->GetRawButton(9);
+		bool buttonStart = gamePad->GetRawButton(10);
+		
+		if(buttonStart && buttonStartFlag) {
+			if(compressor_enabled) {
+				compressor->Stop();
+				compressor_enabled = false;
+			} else {
+				compressor->Start();
+				compressor_enabled = true;
+			}
+			buttonStartFlag = false;
+		} else if (!buttonStart) {
+			buttonStartFlag = true;
+		}
 		
 		if(rightBumper || leftBumper) {
 			if(rightBumper && !leftBumper) {
@@ -294,12 +323,19 @@ public:
 			flag = false;
 		} else if(!buttonA) {
 			flag = true;
-			motorControlLeft(-1 * leftStick);
+			motorControlLeft(leftStick);
 			motorControlRight(rightStick);
 		}
-		
+
+		if(counter % 500) {
+			potentiometerValue = potentiometer->GetValue();
+			printf("%i potentiometer: %i\n", counter, potentiometerValue);
+		}
+
+		counter++;
+
 		// Pickup sequence:
-		// 
+		//
 		// User presses a button
 		// Zoidberg roller spins up, lowered into a position defined by potentiometer
 		// Once reached, it stops lowered
@@ -307,15 +343,20 @@ public:
 		// (Above configurable at the top of the file)
 		// Moves back up to previous position while still spinning
 		// Once in position, roller stops.
-		
-		// Third position for gobbler between 0 degrees and pickup position when firing
-		
-		// 
 
-		motorControlLeft(-1 * leftStick);
-		motorControlRight(rightStick); // motor speed declarations done at the end to ensure watchdog is continually updated.
+		// My name is Dylan and I like to ingest dicks orally and analy at the same time... For joke go to line 87
+		// Line 303 is the best
+
+		// Third position for gobbler between 0 degrees and pickup position when firing
+		// Gobbler runs showly when ball is on the catapult
+
+		
+		// Motor speed declarations done at the end to ensure watchdog is continually updated.
+		motorControlLeft(leftStick);
+		motorControlRight(rightStick);
 
 		shooter->SetSpeed(0.0);
+
 
 		// zoidberg_roller->SetSpeed(1.0);
 		// zoidberg_roller -> Set(pass(buttonB));
@@ -323,7 +364,12 @@ public:
 
 	/********************************** Continuous Routines *************************************/
 
-	int identifyBall(void) {
+	bool identifyBall(void) {
+		
+		Threshold threshold(105, 137, 230, 255, 133, 183);	//HSV threshold criteria, ranges are in that order ie. Hue is 60-100
+		ParticleFilterCriteria2 criteria[] = {
+			{IMAQ_MT_AREA, AREA_MINIMUM, 65535, false, false}
+		}; // Particle filter criteria, used to filter out small particles
 
 		while (IsAutonomous() && IsEnabled()) {
             /**
@@ -334,7 +380,7 @@ public:
 			ColorImage *image;
 			//image = new RGBImage("/testImage.jpg");		// get the sample image from the cRIO flash
 
-			image = camera.GetImage();				//To get the images from the camera comment the line above and uncomment this one
+			image = camera->GetImage();				//To get the images from the camera comment the line above and uncomment this one
 			BinaryImage *thresholdImage = image->ThresholdHSV(threshold);	// get just the green target pixels
 			//thresholdImage->Write("/threshold.bmp");
 			BinaryImage *filteredImage = thresholdImage->ParticleFilter(criteria, 1);	//Remove small particles
@@ -442,8 +488,13 @@ public:
 		}
 	}
 
-	void identifyHotSpots(void)
+	bool identifyHotSpots(void)
 	{
+		Threshold threshold(105, 137, 230, 255, 133, 183);	//HSV threshold criteria, ranges are in that order ie. Hue is 60-100
+		ParticleFilterCriteria2 criteria[] = {
+			{IMAQ_MT_AREA, AREA_MINIMUM, 65535, false, false}
+		}; // Particle filter criteria, used to filter out small particles
+		
 		while (IsAutonomous() && IsEnabled()) {
             /**
              * Do the image capture with the camera and apply the algorithm described above. This
@@ -451,9 +502,10 @@ public:
              * level directory in the flash memory on the cRIO. The file name in this case is "testImage.jpg"
              */
 			ColorImage *image;
-			image = new RGBImage("/testImage.jpg");		// get the sample image from the cRIO flash
+			
+			// image = new RGBImage("/testImage.jpg");		// get the sample image from the cRIO flash
 
-			//image = camera.GetImage();				//To get the images from the camera comment the line above and uncomment this one
+			image = camera->GetImage();	// To get the images from the camera comment the line above and uncomment this one
 			BinaryImage *thresholdImage = image->ThresholdHSV(threshold);	// get just the green target pixels
 			//thresholdImage->Write("/threshold.bmp");
 			BinaryImage *filteredImage = thresholdImage->ParticleFilter(criteria, 1);	//Remove small particles
@@ -561,7 +613,7 @@ public:
 		}
 	}
 	
-	double computeDistance (BinaryImage *image, ParticleAnalysisReport *report, bool outer) {
+	double computeDistance (BinaryImage *image, ParticleAnalysisReport *report) {
 		double rectShort, height;
 		int targetHeight;
 	
@@ -569,7 +621,7 @@ public:
 		//using the smaller of the estimated rectangle short side and the bounding rectangle height results in better performance
 		//on skewed rectangles
 		height = min(report->boundingRect.height, rectShort);
-		targetHeight = outer ? 29 : 21;
+		targetHeight = 32;
 	
 		return X_IMAGE_RES * targetHeight / (height * 12 * 2 * tan(VIEW_ANGLE*PI/(180*2)));
 	}
