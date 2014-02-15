@@ -38,8 +38,11 @@ const double yMin[YMINSIZE] = {.4, .6, .05, .05, .05, .05, .05, .05, .05, .05, .
 								.05, .05, .6, 0};
 const double RectHotGoalRatio = 0.95;
 
+// *wind* Flags *wind* (Dicks = true) *Dicks Waving in the Wind*
 bool compressor_enabled = true;
 bool buttonStartFlag = true;
+bool armFlag = true;
+bool flag = true;
 
 int potentiometerValue;
 int counter = 0;
@@ -284,8 +287,6 @@ public:
 	}
 
 	void TeleopPeriodic(void) {
-		bool flag = true; // Flag object initial declaration
-
 		float leftStick  = -1*gamePadDriver->GetRawAxis(2);
 		float rightStick = gamePadDriver->GetRawAxis(4);
 
@@ -324,28 +325,22 @@ public:
 				ShiftLow();
 			}
 		
-		}
-		else if(rightTrigger&&armFlag){
-			armFlag=false;
+		} else if(rightTrigger && armFlag) {
+			armFlag = false;
 			moveGobbler(2);
-			if(distanceSensor->getValue()>90){ // arbitrary value TEST AND FIX
+			if(distanceSensor->GetValue() > 90) { // arbitrary value TEST AND FIX
 				moveGobbler(0);
 			}
-		}
-		else if(leftTrigger){
+		} else if(leftTrigger){
 			moveGobbler(0);
-		}
-		else if(buttonB){
-			rollerSpeed=-1.0;
-		}	
-		}
-		 else if(buttonA) {
+		} else if(buttonB){
+			rollerSpeed = -1.0;
+		} else if(buttonA) {
 			shoot();
 			flag = false;
 		} else if(!buttonA) {
 			flag = true;
-		}
-		else if(!buttonB){
+		} else if(!buttonB){
 			armFlag=true;
 		}
 		
@@ -511,6 +506,7 @@ public:
 			delete scores;
 			delete reports;
 		}
+		return false; // T3mporary!!
 	}
 
 	bool identifyHotSpots(void)
@@ -636,6 +632,7 @@ public:
 			delete scores;
 			delete reports;
 		}
+		return false; // T3mporary!!
 	}
 	
 	double computeDistance (BinaryImage *image, ParticleAnalysisReport *report) {
