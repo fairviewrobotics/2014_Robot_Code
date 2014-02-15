@@ -78,7 +78,8 @@ class BuiltinDefaultCode : public IterativeRobot {
 	DigitalInput *limitSwitchShooter;
 
 	// Joystick
-	Joystick *gamePad;
+	Joystick *gamePadDriver; //silver
+	Joystick *gamePadShooter; //red
 
 	// Declare (x,y) coordinates of the robot on the field.
 	double m_x;
@@ -135,7 +136,8 @@ public:
 		distanceSensor = new AnalogChannel(1);
 		potentiometer = new AnalogChannel(2);
 
-		gamePad = new Joystick(1);
+		gamePadDriver = new Joystick(1);
+		gamePadShooter = new Joystick(2);
 
 		limitSwitchShooter = new DigitalInput(6);
 
@@ -283,22 +285,22 @@ public:
 	void TeleopPeriodic(void) {
 		bool flag = true; // Flag object initial declaration
 
-		float leftStick  = -1*gamePad->GetRawAxis(2);
-		float rightStick = gamePad->GetRawAxis(4);
+		float leftStick  = -1*gamePadDriver->GetRawAxis(2);
+		float rightStick = gamePadDriver->GetRawAxis(4);
 
-		// bool buttonX  = gamePad->GetRawButton(1);
-		bool buttonA     = gamePad->GetRawButton(2);
-		// bool buttonB  = gamePad->GetRawButton(3);
-		// bool buttonY  = gamePad->GetRawButton(4);
+		// bool buttonX  = gamePadDriver->GetRawButton(1);
+		bool buttonA     = gamePadShooter->GetRawButton(2);
+		bool buttonB  = gamePadShooter->GetRawButton(3);
+		// bool buttonY  = gamePadDriver->GetRawButton(4);
 
-		bool leftBumper  = gamePad->GetRawButton(5);
-		bool rightBumper = gamePad->GetRawButton(6);
+		bool leftBumper  = gamePadDriver->GetRawButton(5);
+		bool rightBumper = gamePadDriver->GetRawButton(6);
 		
-		bool leftTrigger  = gamePad->GetRawButton(7);
-		bool rightTrigger = gamePad->GetRawButton(8);
+		bool leftTrigger  = gamePadShooter->GetRawButton(7);
+		bool rightTrigger = gamePadShooter->GetRawButton(8);
 
-		// bool buttonBack = gamePad->GetRawButton(9);
-		bool buttonStart = gamePad->GetRawButton(10);
+		// bool buttonBack = gamePadDriver->GetRawButton(9);
+		bool buttonStart = gamePadDriver->GetRawButton(10);
 		float rollerSpeed;
 		
 		if(buttonStart && buttonStartFlag) {
@@ -382,6 +384,7 @@ public:
 		// zoidbergRoller->SetSpeed(1.0);
 		// zoidbergRoller -> Set(pass(buttonB));
 	}
+	
 
 	/********************************** Continuous Routines *************************************/
 
