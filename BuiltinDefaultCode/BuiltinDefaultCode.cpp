@@ -51,7 +51,7 @@ class BuiltinDefaultCode : public IterativeRobot {
 	Talon *left_2;
 	Talon *right_1;
 	Talon *right_2;
-	Victor *zoidberg_roller;
+	Victor *zoidbergRoller;
 	Victor *zoidberg_position;
 	Victor *shooter;
 	
@@ -123,7 +123,7 @@ public:
 		// Dicks
 		zoidberg_position = new Victor(5);
 		shooter = new Victor(7);
-		zoidberg_roller = new Victor(8);
+		zoidbergRoller = new Victor(8);
 
 		// Compressor
 		compressor = new Compressor(3,1);
@@ -226,41 +226,42 @@ public:
 				left_2 -> Set(0.0);
 				right_1 -> Set(0.0);
 				right_2 -> Set(0.0);
-				zoidberg_roller -> Set(0.0);
+				zoidbergRoller -> Set(0.75);
 			}
+			zoidbergRoller->Set(0.0);
 		}
 		if(position == 1) {
 			if(potentiometer->GetValue() < 45) {
 				while(potentiometer->GetValue() <= 45) {
 					zoidberg_position->SetSpeed(speed);
-					shooter->Set(0.3);
+					shooter->Set(0.0);
 					left_1 -> Set(0.0);
 					left_2 -> Set(0.0);
 					right_1 -> Set(0.0);
 					right_2 -> Set(0.0);
-					zoidberg_roller -> Set(0.0);
+					zoidbergRoller -> Set(0.0);
 				}
 			} else if(potentiometer->GetValue() >= 45) {
 				while(potentiometer->GetValue() >= 45) {
 					zoidberg_position->SetSpeed(speed);
-					shooter->Set(0.3);
+					shooter->Set(0.0);
 					left_1 -> Set(0.0);
 					left_2 -> Set(0.0);
 					right_1 -> Set(0.0);
 					right_2 -> Set(0.0);
-					zoidberg_roller -> Set(0.0);
+					zoidbergRoller -> Set(0.0);
 				}
 			}
 		} else if(position == 2){
 			while(potentiometer->GetValue() <= 90){
 				zoidberg_position->SetSpeed(speed);
-				shooter->Set(0.3);
+				shooter->Set(0.0);
 				left_1 -> Set(0.0);
 				left_2 -> Set(0.0);
 				right_1 -> Set(0.0);
 				right_2 -> Set(0.0);
-				zoidberg_roller -> Set(0.0);
 			}
+			zoidbergRoller->SetSpeed(0.75 );
 		}
 	}
 
@@ -293,11 +294,12 @@ public:
 		bool leftBumper  = gamePad->GetRawButton(5);
 		bool rightBumper = gamePad->GetRawButton(6);
 		
-		// bool leftTrigger  = gamePad->GetRawButton(7);
-		// bool rightTrigger = gamePad->GetRawButton(8);
+		bool leftTrigger  = gamePad->GetRawButton(7);
+		bool rightTrigger = gamePad->GetRawButton(8);
 
 		// bool buttonBack = gamePad->GetRawButton(9);
 		bool buttonStart = gamePad->GetRawButton(10);
+		float rollerSpeed;
 		
 		if(buttonStart && buttonStartFlag) {
 			if(compressor_enabled) {
@@ -318,14 +320,32 @@ public:
 			} else if(leftBumper && !rightBumper) {
 				ShiftLow();
 			}
-		} else if(buttonA) {
+		
+		}
+		else if(rightTrigger&&armFlag){
+			armFlag=false;
+			moveGobbler(2);
+			if(distanceSensor->getValue()>90){ // arbitrary value TEST AND FIX
+				moveGobbler(0);
+			}
+		}
+		else if(leftTrigger){
+			moveGobbler(0);
+		}
+		else if(buttonB){
+			rollerSpeed=-1.0;
+		}	
+		}
+		 else if(buttonA) {
 			shoot();
 			flag = false;
 		} else if(!buttonA) {
 			flag = true;
-			motorControlLeft(leftStick);
-			motorControlRight(rightStick);
 		}
+		else if(!buttonB){
+			armFlag=true;
+		}
+		
 
 		if(counter % 500) {
 			potentiometerValue = potentiometer->GetValue();
@@ -354,12 +374,13 @@ public:
 		// Motor speed declarations done at the end to ensure watchdog is continually updated.
 		motorControlLeft(leftStick);
 		motorControlRight(rightStick);
+		zoidbergRoller->SetSpeed(rollerSpeed);
 
 		shooter->SetSpeed(0.0);
 
 
-		// zoidberg_roller->SetSpeed(1.0);
-		// zoidberg_roller -> Set(pass(buttonB));
+		// zoidbergRoller->SetSpeed(1.0);
+		// zoidbergRoller -> Set(pass(buttonB));
 	}
 
 	/********************************** Continuous Routines *************************************/
@@ -725,43 +746,31 @@ public:
 	}
 
 	void shoot(void) {
-		moveGobbler(0);
+		moveGobbler(1);
 		// Not sure about the below values
+		
 		while(!limitSwitchShooter->Get()) { // Limit switch: false = pressed, true = not pressed
 			shooter->Set(0.3);
 			left_1 -> Set(0.0);
 			left_2 -> Set(0.0);
 			right_1 -> Set(0.0);
 			right_2 -> Set(0.0);
-			zoidberg_roller -> Set(0.0);
+			zoidbergRoller -> Set(0.0);
 			zoidberg_position -> Set(0.0);
 		}
 
 		while(limitSwitchShooter->Get()) {
-			shooter->Set(0.5);
+			shooter->Set(0.3);
 			left_1 -> Set(0.0);
 			left_2 -> Set(0.0);
 			right_1 -> Set(0.0);
 			right_2 -> Set(0.0);
-			zoidberg_roller -> Set(0.0);
+			zoidbergRoller -> Set(0.0);
 			zoidberg_position -> Set(0.0);
 		}
 
-		shooter->Set(0);
-		moveGobbler(2);
-	}
-
-	float pass(bool buttonB) {
-		float speed = 0.25;
-		moveGobbler(2); //Someone write this method!
-		if (buttonB)
-		{
-			return speed;
-		}
-		else
-		{
-			return 0.0;
-		}
+		shooter->Set(0.0);
+		moveGobbler(0);
 	}
 
 	void turn(int x) { // x is an angle in radians. Left turn is positive. Right turn is negative.
