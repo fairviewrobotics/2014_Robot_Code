@@ -12,6 +12,7 @@
 #define ASPECT_RATIO_LIMIT 75
 #define X_EDGE_LIMIT 40
 #define Y_EDGE_LIMIT 60
+#define robotDiameter 10
 
 // Minimum area of particles to be considered
 #define AREA_MINIMUM 500
@@ -193,7 +194,7 @@ public:
 	}
 
 	void AutonomousPeriodic(void) {
-		initialShot(1); // 1 is a temporary value.
+		initialShot(); // 1 is a temporary value.
 		centerRobot();
 		seekAndDestroy();
 		reposition();
@@ -714,13 +715,22 @@ public:
 		return isHot;
 	}
 
-	void initialShot(int x) {
-//		while(shooterEncoder->Get() < x)
-//		{
-//			motorControlLeft(1.0); // Move forward for set length determined by encoders position
-//			motorControlRight(1.0);
-//		}
-//		shoot();
+	void initialShot() {
+		if(hotOrNot){
+		straight(500); // temp value
+		shoot();
+	}else{
+		straight(-500); //temp value
+		turn(-PI/2); // turn 90
+		straight(1000); // drive to other side
+		turn(PI/2); // turn 90
+		// maybe drive forward using distance sensor?
+		// meh should be fine
+		
+		shoot();
+	}
+		
+		
 	}
 
 	bool centerRobot(void) {
@@ -749,38 +759,32 @@ public:
 	}
 
 	void shoot(void) {
-		moveGobbler(1);
-		// Not sure about the below values
+		int stage=0;
+		zoidbergAnalog->GetValue();
 		
-		while(!limitSwitchShooter->Get()) { // Limit switch: false = pressed, true = not pressed
-			shooter->Set(0.3);
-			left_1 -> Set(0.0);
-			left_2 -> Set(0.0);
-			right_1 -> Set(0.0);
-			right_2 -> Set(0.0);
-			zoidbergRoller -> Set(0.0);
-			zoidberg_position -> Set(0.0);
+		while(limitSwitch->Get()){ // not pressed
+			int shooterSpeed=1.0;
+			int positionSpeed =0.0;
+			if(zoidbergAnalog<90){
+				positionSpeed->SetSpeed(0.5); //90 is a temp value
+			}
+			Shooter->SetSpeed(shooterSpeed);
+			motorControlLeft(0);
+			motorControlRight(0);
+			zoidbergRoller->SetSpeed(0);
+			zoidbergPosition->SetSpeed(positionSpeed);
 		}
-
-		while(limitSwitchShooter->Get()) {
-			shooter->Set(0.3);
-			left_1 -> Set(0.0);
-			left_2 -> Set(0.0);
-			right_1 -> Set(0.0);
-			right_2 -> Set(0.0);
-			zoidbergRoller -> Set(0.0);
-			zoidberg_position -> Set(0.0);
-		}
-
-		shooter->Set(0.0);
-		moveGobbler(0);
+		shooter->SetSpeed(0.0);
+			
+	
 	}
+
 
 	void turn(int x) { // x is an angle in radians. Left turn is positive. Right turn is negative.
 		leftEncoder->Reset();
 		rightEncoder->Reset();
         double R = rightEncoder -> GetDistance(); // This won't work, need the gear ratio.
-        double L = leftEncoder -> GetDistance();
+        double L = leftEncoder -> GetDistance(); 
 		double tempangle = 0;
 
 		if(x <= 0) {
@@ -790,7 +794,7 @@ public:
 				motorControlRight(0.5);
                 R = rightEncoder -> GetDistance(); 
                 L = leftEncoder -> GetDistance();
-                tempangle = getAngleFromTurn(R, L, 0.3); // TEMP 0.3 is the distance from the center of the robot to the wheels.
+                tempangle = getAngleFromTurn(R, L, robotDiameter); // TEMP 0.3 is the distance from the center of the robot to the wheels.
 			}
 		} else {
 			while( tempangle < x) { // Encoder -> turn radius shit here check with gyro
@@ -798,7 +802,7 @@ public:
 				motorControlRight(-0.5);
                 R = rightEncoder -> GetDistance();
                 L = leftEncoder -> GetDistance();
-                tempangle = getAngleFromTurn(R, L, 0.3);
+                tempangle = getAngleFromTurn(R, L, robotDiameter);
 			}
 		}
 	}
@@ -815,6 +819,7 @@ public:
             while (x < d) {
                motorControlRight(.5);
                motorControlLeft(.5);
+			   
                templ = leftEncoder -> GetDistance();
                tempr = rightEncoder -> GetDistance();
                x = (tempr + templ)/2;
@@ -838,7 +843,7 @@ public:
         double R = rightEncoder -> GetDistance();
         double L = leftEncoder -> GetDistance();
         double d = (R+L)/2;
-        m_x += d * sin(angle);
+        m_x += d * sin(angle); 
         m_y += d * cos(angle);
     }
 	
